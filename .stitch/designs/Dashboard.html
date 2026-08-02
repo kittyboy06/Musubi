@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Misubi | Personal Reflection Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#532900",
+                        "secondary-fixed": "#dee1ff",
+                        "on-tertiary-container": "#ce8f5b",
+                        "on-secondary-container": "#50577f",
+                        "on-surface": "#1a1c1c",
+                        "inverse-primary": "#c0c4ea",
+                        "surface-container-low": "#f3f3f3",
+                        "outline": "#77767e",
+                        "on-primary-fixed": "#141936",
+                        "on-error": "#ffffff",
+                        "primary": "#181d3a",
+                        "error-container": "#ffdad6",
+                        "secondary": "#555c84",
+                        "secondary-container": "#c8cffe",
+                        "surface-tint": "#585c7d",
+                        "on-tertiary-fixed": "#2f1500",
+                        "outline-variant": "#c7c5ce",
+                        "surface-variant": "#e2e2e2",
+                        "on-surface-variant": "#46464d",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed-dim": "#bdc4f2",
+                        "surface": "#f9f9f9",
+                        "on-background": "#1a1c1c",
+                        "error": "#ba1a1a",
+                        "background": "#f9f9f9",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e8e8e8",
+                        "on-primary-container": "#969abe",
+                        "surface-container-highest": "#e2e2e2",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#f9f9f9",
+                        "primary-fixed-dim": "#c0c4ea",
+                        "inverse-surface": "#2f3131",
+                        "on-secondary-fixed-variant": "#3d446b",
+                        "inverse-on-surface": "#f1f1f1",
+                        "primary-fixed": "#dee0ff",
+                        "on-primary-fixed-variant": "#404564",
+                        "tertiary-fixed": "#ffdcc3",
+                        "on-tertiary": "#ffffff",
+                        "primary-container": "#2d3250",
+                        "on-secondary-fixed": "#11183d",
+                        "tertiary": "#341800",
+                        "on-tertiary-fixed-variant": "#6a3b0e",
+                        "surface-dim": "#dadada",
+                        "surface-container": "#eeeeee",
+                        "tertiary-fixed-dim": "#feb880"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "xl": "32px",
+                        "xs": "4px",
+                        "unit": "4px",
+                        "xxl": "48px",
+                        "gutter": "16px",
+                        "lg": "24px",
+                        "container-padding": "20px",
+                        "sm": "8px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Manrope"],
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "headline-md": ["Manrope"],
+                        "headline-lg": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "display": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "display": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .custom-shadow {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+        .task-checkbox:checked + .task-label {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        .task-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-blur {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.85);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="w-full sticky top-0 z-50 bg-background border-b border-outline-variant flex justify-between items-center px-container-padding h-16 max-w-[768px] mx-auto">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-2xl" data-icon="spa">spa</span>
+<div class="flex flex-col">
+<h1 class="font-display text-headline-md text-primary leading-none">Misubi</h1>
+<span class="font-label-caps text-[10px] text-on-surface-variant tracking-wider">TUESDAY, OCT 24</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="search">search</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant cursor-pointer active:opacity-80">
+<img class="w-full h-full object-cover" data-alt="A clean, professional close-up portrait of a user with a serene expression, shot in soft studio lighting. The background is a muted, minimalist gray-blue, consistent with a high-end productivity app aesthetic. The image is crisp, modern, and exudes a sense of mindful focus and calm professionalism." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBAnwX5TWIvb5aYuD842l7YEfgfLwyXB6HK2s675faPY9rpS8LLJo7weyJ8AOCVYPyFV2CyyD5ekDdJq1op9E0e4K3FNA4aul0dK_IBR3eHuY3uqqvD9Twn3O8GAvKvuQts1Y1s4MfVsZ6XFS7HvV3r2vDzPGjjZ3pDgFSdSRw3e9SpnPQfoWJDpqNENfJMJMXF9BYpDxlkpkChmLu3NV7gQDPv_zX95Zb09ip5bC1UArwTC8RzNGOFHftLlkNSj-IIP2f47g8Cjbc"/>
+</div>
+</div>
+</header>
+<main class="max-w-[768px] mx-auto px-container-padding pt-md space-y-lg">
+<!-- Hero Overview: Daily Reflection Stats -->
+<section>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md custom-shadow">
+<div class="flex justify-between items-center mb-md">
+<h2 class="font-headline-md text-primary">Daily Reflection</h2>
+<span class="material-symbols-outlined text-on-surface-variant opacity-40" data-icon="info">info</span>
+</div>
+<div class="grid grid-cols-2 gap-md">
+<div class="space-y-1">
+<span class="font-label-caps text-on-surface-variant text-[11px]">JOURNAL STREAK</span>
+<div class="flex items-baseline gap-1">
+<span class="font-display text-display text-primary">12</span>
+<span class="font-body-sm text-on-surface-variant">Days</span>
+</div>
+</div>
+<div class="space-y-1">
+<span class="font-label-caps text-on-surface-variant text-[11px]">COMPLETION</span>
+<div class="flex items-baseline gap-1">
+<span class="font-display text-display text-primary">85</span>
+<span class="font-body-sm text-on-surface-variant">%</span>
+</div>
+</div>
+</div>
+<div class="mt-lg pt-lg border-t border-outline-variant grid grid-cols-3 gap-sm">
+<div class="flex flex-col items-center p-2 rounded-lg bg-surface">
+<span class="material-symbols-outlined text-secondary text-lg mb-1" data-icon="edit_square">edit_square</span>
+<span class="font-label-caps text-[10px] text-on-surface-variant">420 WORDS</span>
+</div>
+<div class="flex flex-col items-center p-2 rounded-lg bg-surface">
+<span class="material-symbols-outlined text-secondary text-lg mb-1" data-icon="sentiment_satisfied">sentiment_satisfied</span>
+<span class="font-label-caps text-[10px] text-on-surface-variant">CALM MOOD</span>
+</div>
+<div class="flex flex-col items-center p-2 rounded-lg bg-surface">
+<span class="material-symbols-outlined text-secondary text-lg mb-1" data-icon="mindfulness">mindfulness</span>
+<span class="font-label-caps text-[10px] text-on-surface-variant">20M MED</span>
+</div>
+</div>
+</div>
+</section>
+<!-- To-Do & Tasks: Today's Focus -->
+<section class="space-y-md">
+<div class="flex justify-between items-end">
+<h2 class="font-headline-md text-primary">Today's Focus</h2>
+<span class="font-label-caps text-primary text-[11px]">4 / 6 DONE</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full transition-all duration-700" style="width: 66%"></div>
+</div>
+<div class="space-y-sm">
+<!-- Task 1 -->
+<div class="task-card flex items-center p-md bg-surface-container-lowest border border-outline-variant rounded-lg gap-md">
+<input class="task-checkbox w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+<div class="flex-1 min-w-0">
+<p class="task-label font-body-md text-on-surface truncate">Quarterly reflection review</p>
+<div class="flex gap-2 mt-1">
+<span class="px-2 py-0.5 rounded text-[10px] font-label-caps bg-error-container text-error">HIGH</span>
+<span class="text-[10px] font-label-caps text-on-surface-variant">#WORK</span>
+</div>
+</div>
+<button class="text-on-surface-variant opacity-40"><span class="material-symbols-outlined" data-icon="drag_indicator">drag_indicator</span></button>
+</div>
+<!-- Task 2 -->
+<div class="task-card flex items-center p-md bg-surface-container-lowest border border-outline-variant rounded-lg gap-md">
+<input checked="" class="task-checkbox w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+<div class="flex-1 min-w-0">
+<p class="task-label font-body-md text-on-surface truncate">Mindfulness practice (15m)</p>
+<div class="flex gap-2 mt-1">
+<span class="px-2 py-0.5 rounded text-[10px] font-label-caps bg-secondary-container text-secondary">MEDIUM</span>
+<span class="text-[10px] font-label-caps text-on-surface-variant">#PERSONAL</span>
+</div>
+</div>
+<button class="text-on-surface-variant opacity-40"><span class="material-symbols-outlined" data-icon="drag_indicator">drag_indicator</span></button>
+</div>
+<!-- Task 3 -->
+<div class="task-card flex items-center p-md bg-surface-container-lowest border border-outline-variant rounded-lg gap-md opacity-60 grayscale-[0.5]">
+<input checked="" class="task-checkbox w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+<div class="flex-1 min-w-0">
+<p class="task-label font-body-md text-on-surface truncate">Draft weekly intent journal</p>
+<div class="flex gap-2 mt-1">
+<span class="px-2 py-0.5 rounded text-[10px] font-label-caps bg-primary-fixed text-primary">LOW</span>
+<span class="text-[10px] font-label-caps text-on-surface-variant">#JOURNAL</span>
+</div>
+</div>
+<button class="text-on-surface-variant opacity-40"><span class="material-symbols-outlined" data-icon="drag_indicator">drag_indicator</span></button>
+</div>
+</div>
+</section>
+<!-- Reminders: Coming Up -->
+<section class="space-y-md">
+<h2 class="font-headline-md text-primary">Coming Up</h2>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden divide-y divide-outline-variant">
+<!-- Reminder 1 -->
+<div class="p-md flex justify-between items-center bg-gradient-to-r from-surface-container-lowest to-surface">
+<div class="flex gap-4 items-center">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</div>
+<div>
+<p class="font-body-md font-semibold text-primary">System Refresh</p>
+<p class="text-body-sm text-on-surface-variant">In 15m • 14:00 PM</p>
+</div>
+</div>
+<div class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</div>
+</div>
+<!-- Reminder 2 -->
+<div class="p-md flex justify-between items-center">
+<div class="flex gap-4 items-center">
+<div class="w-10 h-10 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="event">event</span>
+</div>
+<div>
+<p class="font-body-md font-semibold text-primary">Evening Log</p>
+<p class="text-body-sm text-on-surface-variant">At 8:30 PM</p>
+</div>
+</div>
+<div class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Quick Vault Launcher (Docked FAB Bar) -->
+<div class="fixed bottom-20 left-0 w-full px-container-padding pointer-events-none z-40 max-w-[768px] left-1/2 -translate-x-1/2">
+<div class="flex justify-center gap-4 pointer-events-auto">
+<button class="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary rounded-full shadow-lg active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-sm" data-icon="book" style="font-variation-settings: 'FILL' 1;">book</span>
+<span class="font-label-caps text-[11px]">OBSIDIAN VAULT</span>
+</button>
+<button class="flex items-center gap-2 px-6 py-3 bg-white border border-outline-variant text-primary rounded-full shadow-lg active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-sm" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label-caps text-[11px]">START VAULTCHAT</span>
+</button>
+</div>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[768px] flex justify-around items-center h-16 px-gutter bg-surface z-50 border-t border-outline-variant shadow-[0_-4px_12px_rgba(0,0,0,0.04)]">
+<button class="relative flex flex-col items-center justify-center text-primary after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary after:rounded-full hover:opacity-100 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-caps text-[9px] mt-1">HOME</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:opacity-100 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span class="font-label-caps text-[9px] mt-1">JOURNAL</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:opacity-100 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span>
+<span class="font-label-caps text-[9px] mt-1">STATS</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:opacity-100 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-caps text-[9px] mt-1">SETTINGS</span>
+</button>
+</nav>
+<script>
+        // Simple micro-interaction for checkboxes
+        document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const card = this.closest('.task-card');
+                if (this.checked) {
+                    card.style.opacity = '0.6';
+                    card.style.transform = 'scale(0.98)';
+                } else {
+                    card.style.opacity = '1';
+                    card.style.transform = 'scale(1)';
+                }
+            });
+        });
+
+        // Current time update logic (Static display as requested but ready for dynamic)
+        console.log("Misubi Productivity Dashboard Loaded");
+    </script>
+</body></html>

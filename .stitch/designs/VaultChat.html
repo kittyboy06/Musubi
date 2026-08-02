@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VaultChat AI - Musubi</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Design System Tokens & Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "tertiary": "#341800",
+                "primary": "#181d3a",
+                "surface-tint": "#585c7d",
+                "on-primary-container": "#969abe",
+                "primary-fixed": "#dee0ff",
+                "primary-container": "#2d3250",
+                "on-tertiary": "#ffffff",
+                "tertiary-fixed": "#ffdcc3",
+                "on-background": "#1a1c1c",
+                "surface-container-high": "#e8e8e8",
+                "surface-variant": "#e2e2e2",
+                "on-surface": "#1a1c1c",
+                "on-primary-fixed-variant": "#404564",
+                "tertiary-fixed-dim": "#feb880",
+                "surface-bright": "#f9f9f9",
+                "surface-dim": "#dadada",
+                "surface-container": "#eeeeee",
+                "outline-variant": "#c7c5ce",
+                "secondary": "#555c84",
+                "inverse-surface": "#2f3131",
+                "on-tertiary-container": "#ce8f5b",
+                "on-secondary-fixed-variant": "#3d446b",
+                "background": "#f9f9f9",
+                "surface-container-lowest": "#ffffff",
+                "inverse-primary": "#c0c4ea",
+                "on-tertiary-fixed": "#2f1500",
+                "on-secondary": "#ffffff",
+                "secondary-container": "#c8cffe",
+                "on-tertiary-fixed-variant": "#6a3b0e",
+                "secondary-fixed-dim": "#bdc4f2",
+                "surface": "#f9f9f9",
+                "outline": "#77767e",
+                "secondary-fixed": "#dee1ff",
+                "on-surface-variant": "#46464d",
+                "error": "#ba1a1a",
+                "surface-container-highest": "#e2e2e2",
+                "primary-fixed-dim": "#c0c4ea",
+                "inverse-on-surface": "#f1f1f1",
+                "on-error-container": "#93000a",
+                "surface-container-low": "#f3f3f3",
+                "on-secondary-fixed": "#11183d",
+                "on-secondary-container": "#50577f",
+                "tertiary-container": "#532900",
+                "on-error": "#ffffff",
+                "error-container": "#ffdad6",
+                "on-primary-fixed": "#141936",
+                "on-primary": "#ffffff"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            "spacing": {
+                "container-padding": "20px",
+                "xs": "4px",
+                "gutter": "16px",
+                "xxl": "48px",
+                "xl": "32px",
+                "sm": "8px",
+                "lg": "24px",
+                "md": "16px",
+                "unit": "4px"
+            },
+            "fontFamily": {
+                "label-caps": ["JetBrains Mono"],
+                "headline-md": ["Manrope"],
+                "headline-lg-mobile": ["Manrope"],
+                "body-sm": ["Manrope"],
+                "body-md": ["Manrope"],
+                "display": ["Manrope"],
+                "body-lg": ["Manrope"],
+                "headline-lg": ["Manrope"]
+            },
+            "fontSize": {
+                "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                "headline-lg-mobile": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+                "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                "display": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #f9f9f9;
+            font-family: 'Manrope', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .message-bubble {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            border: 1px solid #EEEEEE;
+        }
+        .persona-active {
+            background-color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e2e2e2;
+            border-radius: 10px;
+        }
+        .glass-header {
+            backdrop-filter: blur(12px);
+            background: rgba(249, 249, 249, 0.8);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface flex flex-col h-screen overflow-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 glass-header border-b border-surface-variant flex flex-col px-container-padding pt-4 pb-2">
+<div class="flex justify-between items-center h-12 w-full max-w-3xl mx-auto">
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors duration-200">
+<span class="material-symbols-outlined text-primary" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary tracking-tight">VaultChat AI</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors duration-200">
+<span class="material-symbols-outlined text-primary" data-icon="settings">settings</span>
+</button>
+</div>
+<!-- Persona Toggle -->
+<div class="w-full max-w-sm mx-auto mt-4 mb-2 p-1 bg-surface-container rounded-xl flex items-center">
+<button class="flex-1 py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 persona-active text-primary">
+<span class="material-symbols-outlined text-sm" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-label-caps text-label-caps">Friend</span>
+</button>
+<button class="flex-1 py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 text-on-surface-variant opacity-60 hover:opacity-100">
+<span class="material-symbols-outlined text-sm" data-icon="local_fire_department">local_fire_department</span>
+<span class="font-label-caps text-label-caps">Tyler Durden</span>
+</button>
+</div>
+</header>
+<!-- Chat Stream Canvas -->
+<main class="flex-1 overflow-y-auto pt-44 pb-32 px-container-padding custom-scrollbar">
+<div class="max-w-3xl mx-auto space-y-gutter">
+<!-- Date Indicator -->
+<div class="flex justify-center py-4">
+<span class="font-label-caps text-label-caps text-outline-variant uppercase tracking-widest">Today</span>
+</div>
+<!-- AI Message: Friend Persona -->
+<div class="flex flex-col items-start gap-2">
+<div class="flex items-center gap-2 ml-1">
+<div class="w-6 h-6 rounded-full bg-green-50 flex items-center justify-center border border-green-200">
+<span class="material-symbols-outlined text-[14px] text-green-600" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase">Friend</span>
+</div>
+<div class="message-bubble bg-surface-container-lowest p-md rounded-2xl rounded-tl-none max-w-[85%] border-l-4 border-l-green-400">
+<p class="font-body-md text-body-md text-on-surface">Good morning! I noticed you were writing about your goals yesterday. How are you feeling about your progress today? Remember to be kind to yourself.</p>
+</div>
+</div>
+<!-- Referenced Context Badge -->
+<div class="flex items-center gap-2 ml-9">
+<div class="flex items-center gap-1.5 px-3 py-1 bg-primary-container rounded-full border border-primary">
+<span class="material-symbols-outlined text-[14px] text-on-primary-container" data-icon="description">description</span>
+<span class="font-label-caps text-[10px] text-on-primary-container">Referenced: Daily Reflection</span>
+</div>
+</div>
+<!-- User Message -->
+<div class="flex flex-col items-end gap-2">
+<div class="message-bubble bg-primary text-on-primary p-md rounded-2xl rounded-tr-none max-w-[85%]">
+<p class="font-body-md text-body-md">Actually, I'm feeling a bit stuck. I didn't finish the tasks I planned for this morning.</p>
+</div>
+</div>
+<!-- Persona Transition Message (Simulated Interaction) -->
+<div class="flex flex-col items-center py-4">
+<div class="h-[1px] w-12 bg-outline-variant mb-4"></div>
+<span class="font-body-sm text-body-sm text-outline italic">Persona switch suggested for motivation...</span>
+</div>
+<!-- AI Message: Tyler Durden Persona -->
+<div class="flex flex-col items-start gap-2">
+<div class="flex items-center gap-2 ml-1">
+<div class="w-6 h-6 rounded-full bg-red-50 flex items-center justify-center border border-red-200">
+<span class="material-symbols-outlined text-[14px] text-red-600" data-icon="local_fire_department">local_fire_department</span>
+</div>
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase">Tyler Durden</span>
+</div>
+<div class="message-bubble bg-surface-container-lowest p-md rounded-2xl rounded-tl-none max-w-[85%] border-l-4 border-l-red-500">
+<p class="font-body-md text-body-md text-on-surface">The things you own end up owning you. You're stuck because you're playing it safe. Forget the plan. Do something that makes you feel alive. Stop being a spectator of your own life.</p>
+</div>
+</div>
+<!-- Referenced Context Badge -->
+<div class="flex items-center gap-2 ml-9">
+<div class="flex items-center gap-1.5 px-3 py-1 bg-secondary-container rounded-full border border-secondary">
+<span class="material-symbols-outlined text-[14px] text-on-secondary-container" data-icon="exercise">exercise</span>
+<span class="font-label-caps text-[10px] text-on-secondary-container">Referenced: Habits</span>
+</div>
+</div>
+<!-- User Message -->
+<div class="flex flex-col items-end gap-2">
+<div class="message-bubble bg-primary text-on-primary p-md rounded-2xl rounded-tr-none max-w-[85%]">
+<p class="font-body-md text-body-md">That's... intense. But maybe I do need to break out of this loop.</p>
+</div>
+</div>
+<!-- AI Message: Friend Persona (Returning) -->
+<div class="flex flex-col items-start gap-2">
+<div class="flex items-center gap-2 ml-1">
+<div class="w-6 h-6 rounded-full bg-green-50 flex items-center justify-center border border-green-200">
+<span class="material-symbols-outlined text-[14px] text-green-600" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+<span class="font-label-caps text-[10px] text-on-surface-variant uppercase">Friend</span>
+</div>
+<div class="message-bubble bg-surface-container-lowest p-md rounded-2xl rounded-tl-none max-w-[85%] border-l-4 border-l-green-400">
+<p class="font-body-md text-body-md text-on-surface">He has a point about breaking the cycle, though maybe a bit harshly. What's one small, non-scary thing you can do right now to shift your energy?</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Input Bar Section -->
+<footer class="fixed bottom-0 left-0 w-full bg-surface border-t border-surface-variant pt-4 pb-8 px-container-padding z-50">
+<div class="max-w-3xl mx-auto flex items-end gap-3">
+<button class="w-12 h-12 flex items-center justify-center rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="add">add</span>
+</button>
+<div class="flex-1 relative">
+<textarea class="w-full bg-surface-container-lowest border border-outline-variant rounded-2xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent resize-none font-body-md text-body-md custom-scrollbar max-h-32" oninput='this.style.height = "";this.style.height = this.scrollHeight + "px"' placeholder="Reflect or ask anything..." rows="1"></textarea>
+</div>
+<button class="w-12 h-12 flex items-center justify-center rounded-xl bg-primary text-on-primary shadow-lg hover:shadow-xl transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="send">send</span>
+</button>
+</div>
+<!-- Suggestions Chips -->
+<div class="max-w-3xl mx-auto flex gap-2 mt-4 overflow-x-auto no-scrollbar">
+<button class="whitespace-nowrap px-4 py-1.5 bg-surface-container-low rounded-full border border-outline-variant/30 font-label-caps text-[11px] text-on-surface-variant hover:bg-surface-container transition-colors">
+                Analyze my week
+            </button>
+<button class="whitespace-nowrap px-4 py-1.5 bg-surface-container-low rounded-full border border-outline-variant/30 font-label-caps text-[11px] text-on-surface-variant hover:bg-surface-container transition-colors">
+                Rewrite my tasks
+            </button>
+<button class="whitespace-nowrap px-4 py-1.5 bg-surface-container-low rounded-full border border-outline-variant/30 font-label-caps text-[11px] text-on-surface-variant hover:bg-surface-container transition-colors">
+                Vent some steam
+            </button>
+</div>
+</footer>
+<!-- Micro-interaction Script -->
+<script>
+        // Auto-scroll to bottom on load
+        window.onload = () => {
+            const chatMain = document.querySelector('main');
+            chatMain.scrollTop = chatMain.scrollHeight;
+        };
+
+        // Simple persona toggle UI logic
+        const personaButtons = document.querySelectorAll('.persona-active').length > 0 ? document.querySelectorAll('header .bg-surface-container button') : [];
+        personaButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                personaButtons.forEach(b => {
+                    b.classList.remove('persona-active', 'text-primary');
+                    b.classList.add('text-on-surface-variant', 'opacity-60');
+                });
+                btn.classList.add('persona-active', 'text-primary');
+                btn.classList.remove('text-on-surface-variant', 'opacity-60');
+            });
+        });
+    </script>
+</body></html>

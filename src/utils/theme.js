@@ -1,0 +1,52 @@
+export const theme = {
+  colors: {
+    bg: '#121214',
+    surface: '#1e1e24',
+    surfaceHover: '#282832',
+    border: '#2c2c36',
+    inputBg: '#18181f',
+    primary: '#181d3a',
+    primaryContainer: '#2d3250',
+    primaryDark: '#12162d',
+    primaryLight: '#8b5cf6',
+    amberAccent: '#ffdcc3',
+    amberText: '#6a3b0e',
+    text: '#f9f9f9',
+    textSecondary: '#cbd5e1',
+    textSubtle: '#9ca3af',
+    danger: '#ef4444',
+    dangerBg: '#3f1717',
+    success: '#10b981',
+    accentGlow: 'rgba(139, 92, 246, 0.2)',
+    // Persona themes
+    friend: {
+      primary: '#10b981',
+      bg: '#064e3b',
+      badge: 'rgba(16, 185, 129, 0.15)',
+      text: '#34d399',
+    },
+    tyler: {
+      primary: '#ef4444',
+      bg: '#7f1d1d',
+      badge: 'rgba(239, 68, 68, 0.15)',
+      text: '#f87171',
+    },
+  },
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 16,
+    lg: 24,
+    xl: 32,
+  },
+  borderRadius: {
+    sm: 6,
+    md: 10,
+    lg: 16,
+    full: 9999,
+  },
+  fonts: {
+    body: 'Manrope',
+    mono: 'JetBrains Mono',
+  },
+};

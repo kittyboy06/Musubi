@@ -1,0 +1,24 @@
+{
+  "projectId": "18373463363482519926",
+  "title": "MUSUBI - Obsidian Vault & AI Chatbot",
+  "deviceType": "MOBILE",
+  "lastSyncTime": "2026-08-01T07:01:54.012Z",
+  "screens": {
+    "f592829c2253470194c7399d47dfc700": {
+      "label": "Dashboard",
+      "id": "f592829c2253470194c7399d47dfc700"
+    },
+    "fc8e33ecd8184dad8a66565265812fc0": {
+      "label": "JournalVault",
+      "id": "fc8e33ecd8184dad8a66565265812fc0"
+    },
+    "7d44e23c46d24fe785332879561f75e3": {
+      "label": "VaultChat",
+      "id": "7d44e23c46d24fe785332879561f75e3"
+    },
+    "46c9d9d6019441678b091744c25b826f": {
+      "label": "KnowledgeGraph",
+      "id": "46c9d9d6019441678b091744c25b826f"
+    }
+  }
+}

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Misubi | Knowledge Graph</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Manrope & JetBrains Mono -->
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-surface": "#2f3131",
+                        "secondary-fixed": "#dee1ff",
+                        "on-error-container": "#93000a",
+                        "inverse-primary": "#c0c4ea",
+                        "on-primary-fixed": "#141936",
+                        "inverse-on-surface": "#f1f1f1",
+                        "primary-fixed-dim": "#c0c4ea",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#341800",
+                        "secondary": "#555c84",
+                        "primary-fixed": "#dee0ff",
+                        "surface-tint": "#585c7d",
+                        "surface-container-high": "#e8e8e8",
+                        "outline-variant": "#c7c5ce",
+                        "on-tertiary": "#ffffff",
+                        "surface-container": "#eeeeee",
+                        "on-tertiary-fixed-variant": "#6a3b0e",
+                        "tertiary-fixed": "#ffdcc3",
+                        "surface-container-highest": "#e2e2e2",
+                        "secondary-container": "#c8cffe",
+                        "on-secondary-container": "#50577f",
+                        "tertiary-fixed-dim": "#feb880",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed": "#11183d",
+                        "surface-dim": "#dadada",
+                        "on-tertiary-container": "#ce8f5b",
+                        "on-surface-variant": "#46464d",
+                        "on-primary-container": "#969abe",
+                        "error": "#ba1a1a",
+                        "primary": "#181d3a",
+                        "surface-variant": "#e2e2e2",
+                        "on-surface": "#1a1c1c",
+                        "error-container": "#ffdad6",
+                        "outline": "#77767e",
+                        "background": "#f9f9f9",
+                        "secondary-fixed-dim": "#bdc4f2",
+                        "on-secondary-fixed-variant": "#3d446b",
+                        "on-background": "#1a1c1c",
+                        "surface": "#f9f9f9",
+                        "primary-container": "#2d3250",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#532900",
+                        "surface-bright": "#f9f9f9",
+                        "on-primary-fixed-variant": "#404564",
+                        "on-error": "#ffffff",
+                        "surface-container-low": "#f3f3f3",
+                        "on-tertiary-fixed": "#2f1500"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "unit": "4px",
+                        "lg": "24px",
+                        "container-padding": "20px",
+                        "sm": "8px",
+                        "xxl": "48px",
+                        "md": "16px",
+                        "gutter": "16px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Manrope"],
+                        "body-sm": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "headline-md": ["Manrope"],
+                        "display": ["Manrope"],
+                        "headline-lg-mobile": ["Manrope"],
+                        "label-caps": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "display": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #f9f9f9;
+            color: #1a1c1c;
+            overflow: hidden; /* Prevent scrolling for the full-screen interactive view */
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom Ambient Shadow for Zenith Focus */
+        .zenith-shadow {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            border: 1px solid #EEEEEE;
+        }
+        .glass-overlay {
+            backdrop-filter: blur(8px);
+            background: rgba(249, 249, 249, 0.7);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="font-body-md text-body-md flex flex-col h-screen">
+<!-- TopAppBar -->
+<header class="w-full sticky top-0 z-50 bg-background dark:bg-background border-b border-outline-variant dark:border-outline flex justify-between items-center px-container-padding h-16 max-w-[768px] mx-auto">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary" data-icon="spa">spa</span>
+<h1 class="font-headline-md text-headline-md text-primary">Knowledge Graph</h1>
+</div>
+<div class="flex-1 max-w-xs mx-md hidden sm:flex">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" data-icon="search">search</span>
+<input class="w-full h-10 pl-10 pr-4 bg-surface-container border-none rounded-lg font-body-sm text-body-sm focus:ring-2 focus:ring-primary transition-all outline-none" placeholder="Search nodes..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container transition-colors" title="Filters">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="tune">tune</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-primary-container cursor-pointer active:opacity-80">
+<img class="w-full h-full object-cover" data-alt="A clean, minimalist portrait of a modern professional with soft lighting and a neutral background, styled in high-key tones to match a mindful and productive app interface. The aesthetic is serene, with professional but approachable styling." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCp471VG7rlbj4nvyxpYr3LPLiT-1qiDNZLLCL-cc82vikbSRXLW6pJfRdSDhcXvi_4hreJm8E-58PRLaXHp9mMkRmaUA6dGkFva5Q0y6yapwNYhJgbFQmKBQTy7FQjO8t500FvzYmnhJrC3O-3TtjSs2U43Z6RDMPfJ_CC8sDQ-M-n70HY8YNoGepnyykTvU7vQbwdC11l4qH-xO-vdCEbveOE3xwQigYwWYZgWkEGrHOr2_YCN3UDfoYT2Z3rjSlpfzOcF4to0rTh"/>
+</div>
+</div>
+</header>
+<!-- Interactive Canvas Layer -->
+<main class="relative flex-1 w-full overflow-hidden">
+<!-- The Knowledge Graph Scene -->
+<!-- STITCH_THREEJS_START:ANIMATION_8 class="absolute inset-0 w-full h-full z-0" -->
+<div class="absolute inset-0 w-full h-full z-0" style="display:block;">
+<script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+<div id="threejs-container-ANIMATION_8" style="width:100%;height:100%"></div>
+<script>
+(function() {
+  const container = document.getElementById('threejs-container-ANIMATION_8');
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  
+const scene = new THREE.Scene();
+const containerWidth = container.clientWidth || window.innerWidth;
+const containerHeight = container.clientHeight || window.innerHeight;
+const camera = new THREE.PerspectiveCamera(75, containerWidth / containerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+renderer.setSize(containerWidth, containerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+container.appendChild(renderer.domElement);
+
+camera.position.z = 15;
+
+// Nodes data
+const nodesData = [
+  { id: 1, label: 'Mindfulness', color: 0x4F46E5, x: -4, y: 3, size: 0.8 },
+  { id: 2, label: 'Habits', color: 0x10B981, x: 5, y: 2, size: 0.6 },
+  { id: 3, label: 'Vision 2026', color: 0xF59E0B, x: 2, y: -4, size: 1.0 },
+  { id: 4, label: 'Daily Reflection', color: 0xEC4899, x: -3, y: -2, size: 0.7 },
+  { id: 5, label: 'Project Ideas', color: 0x8B5CF6, x: 0, y: 0, size: 0.9 }
+];
+
+// Links data (connections)
+const linksData = [
+  [1, 5], [2, 5], [3, 5], [4, 1], [4, 5]
+];
+
+const nodeGroup = new THREE.Group();
+scene.add(nodeGroup);
+
+const nodes = [];
+const nodeMeshes = {};
+
+// Create Nodes
+nodesData.forEach(data => {
+  const geometry = new THREE.SphereGeometry(data.size, 32, 32);
+  const material = new THREE.MeshPhongMaterial({ 
+    color: data.color, 
+    emissive: data.color, 
+    emissiveIntensity: 0.5,
+    shininess: 100 
+  });
+  const node = new THREE.Mesh(geometry, material);
+  node.position.set(data.x, data.y, 0);
+  node.userData = data;
+  nodeGroup.add(node);
+  nodes.push(node);
+  nodeMeshes[data.id] = node;
+});
+
+// Create Links
+const linkMaterial = new THREE.LineBasicMaterial({ color: 0xcccccc, opacity: 0.3, transparent: true });
+linksData.forEach(link => {
+  const start = nodeMeshes[link[0]].position;
+  const end = nodeMeshes[link[1]].position;
+  const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
+  const line = new THREE.Line(geometry, linkMaterial);
+  scene.add(line);
+});
+
+// Lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+scene.add(ambientLight);
+const pointLight = new THREE.PointLight(0xffffff, 1);
+pointLight.position.set(10, 10, 10);
+scene.add(pointLight);
+
+// Animation Loop
+function animate() {
+  requestAnimationFrame(animate);
+  
+  // Subtle floating motion
+  nodes.forEach((node, i) => {
+    node.position.y += Math.sin(Date.now() * 0.001 + i) * 0.002;
+    node.position.x += Math.cos(Date.now() * 0.001 + i) * 0.002;
+  });
+
+  renderer.render(scene, camera);
+}
+animate();
+
+// Handle Resize
+window.addEventListener('resize', () => {
+  const w = container.clientWidth || window.innerWidth;
+  const h = container.clientHeight || window.innerHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+});
+
+})();
+</script>
+</div>
+<!-- STITCH_THREEJS_END:ANIMATION_8 -->
+<!-- Node Information Popover (Mindfulness Active) -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+<div class="zenith-shadow glass-overlay p-md rounded-xl max-w-[200px] animate-in fade-in zoom-in duration-500">
+<div class="flex items-center gap-sm mb-xs">
+<div class="w-2 h-2 rounded-full bg-[#8E97FD]"></div> <!-- Muted Lavender for Mindfulness -->
+<span class="font-label-caps text-label-caps text-on-surface-variant">Active Node</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-xs">Mindfulness</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-md">Connected to 12 habits and 4 journal entries.</p>
+<div class="flex gap-sm">
+<button class="px-3 py-1 bg-primary text-on-primary text-[12px] font-medium rounded-full active:scale-95 transition-transform">Focus</button>
+<button class="px-3 py-1 border border-outline text-primary text-[12px] font-medium rounded-full active:scale-95 transition-transform">Explore</button>
+</div>
+</div>
+</div>
+<!-- Graph Controls (Bottom Right) -->
+<div class="absolute bottom-24 right-md z-20 flex flex-col gap-sm">
+<button class="w-12 h-12 bg-surface zenith-shadow rounded-full flex items-center justify-center hover:bg-surface-container active:scale-90 transition-all text-primary" title="Zoom In">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+<button class="w-12 h-12 bg-surface zenith-shadow rounded-full flex items-center justify-center hover:bg-surface-container active:scale-90 transition-all text-primary" title="Zoom Out">
+<span class="material-symbols-outlined" data-icon="remove">remove</span>
+</button>
+<button class="w-12 h-12 bg-surface zenith-shadow rounded-full flex items-center justify-center hover:bg-surface-container active:scale-90 transition-all text-primary" title="Center Graph">
+<span class="material-symbols-outlined" data-icon="filter_center_focus">filter_center_focus</span>
+</button>
+</div>
+<!-- Bottom Sheet Detail Panel -->
+<div class="absolute bottom-16 left-1/2 -translate-x-1/2 w-full max-w-[768px] z-30 pointer-events-none">
+<div class="zenith-shadow bg-surface-container-lowest rounded-t-xxl p-xl pb-xxl pointer-events-auto transform translate-y-4 hover:translate-y-0 transition-transform duration-300">
+<div class="w-12 h-1.5 bg-outline-variant rounded-full mx-auto mb-xl"></div>
+<div class="flex justify-between items-start mb-md">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary">Vision 2026</h2>
+<div class="flex items-center gap-md mt-sm">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant" data-icon="hub">hub</span>
+<span class="text-body-sm font-medium text-on-surface-variant">3 Connections</span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant" data-icon="calendar_today">calendar_today</span>
+<span class="text-body-sm font-medium text-on-surface-variant">Updated Oct 24</span>
+</div>
+</div>
+</div>
+<button class="bg-primary text-on-primary px-xl py-md rounded-lg font-headline-md active:opacity-90 transition-opacity">
+                        Open Note
+                    </button>
+</div>
+<p class="text-body-md text-on-surface-variant leading-relaxed max-w-2xl">
+                    Long-term strategic objectives focusing on personal growth, digital wellness architecture, and sustainable habits. This node links critical future milestones to current daily rituals.
+                </p>
+<div class="flex gap-sm mt-xl overflow-x-auto pb-sm no-scrollbar">
+<span class="px-md py-sm bg-secondary-container text-on-secondary-container rounded-full text-body-sm">Personal Growth</span>
+<span class="px-md py-sm bg-surface-container text-on-surface-variant rounded-full text-body-sm">Strategy</span>
+<span class="px-md py-sm bg-surface-container text-on-surface-variant rounded-full text-body-sm">Mindfulness</span>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[768px] h-16 px-gutter bg-surface dark:bg-surface-container-low border-t border-outline-variant dark:border-outline shadow-[0_-4px_12px_rgba(0,0,0,0.04)] flex justify-around items-center z-50">
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant opacity-60 hover:opacity-100 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-caps text-label-caps mt-1">HOME</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant opacity-60 hover:opacity-100 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span class="font-label-caps text-label-caps mt-1">NOTES</span>
+</button>
+<button class="relative flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-primary dark:after:bg-primary-fixed-dim after:rounded-full transition-all">
+<span class="material-symbols-outlined" data-icon="query_stats" style="font-variation-settings: 'FILL' 1;">query_stats</span>
+<span class="font-label-caps text-label-caps mt-1">GRAPH</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant opacity-60 hover:opacity-100 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-caps text-label-caps mt-1">SETTINGS</span>
+</button>
+</nav>
+<!-- Micro-interactions Script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Handle hover/click effects for the bottom sheet (simplified visual demo)
+            const bottomSheet = document.querySelector('.bottom-sheet-content');
+            
+            // Interaction feedback for the zoom buttons
+            const controls = document.querySelectorAll('.right-md button');
+            controls.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Small visual feedback if needed beyond CSS active states
+                });
+            });
+
+            // Prevent scroll on mobile for better canvas feel
+            document.body.addEventListener('touchmove', (e) => {
+                if (e.target.closest('.pointer-events-auto')) return;
+                e.preventDefault();
+            }, { passive: false });
+        });
+    </script>
+</body></html>

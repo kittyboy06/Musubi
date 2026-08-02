@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Misubi - Journal Vault</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface": "#f9f9f9",
+                    "primary-container": "#2d3250",
+                    "tertiary-fixed": "#ffdcc3",
+                    "on-surface": "#1a1c1c",
+                    "inverse-surface": "#2f3131",
+                    "error-container": "#ffdad6",
+                    "background": "#f9f9f9",
+                    "on-primary": "#ffffff",
+                    "secondary-container": "#c8cffe",
+                    "on-background": "#1a1c1c",
+                    "surface-variant": "#e2e2e2",
+                    "surface-container-highest": "#e2e2e2",
+                    "surface-bright": "#f9f9f9",
+                    "tertiary": "#341800",
+                    "on-error-container": "#93000a",
+                    "surface-dim": "#dadada",
+                    "secondary-fixed": "#dee1ff",
+                    "outline": "#77767e",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-fixed": "#2f1500",
+                    "on-primary-fixed-variant": "#404564",
+                    "primary-fixed": "#dee0ff",
+                    "inverse-primary": "#c0c4ea",
+                    "on-secondary-container": "#50577f",
+                    "surface-container": "#eeeeee",
+                    "on-secondary-fixed": "#11183d",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed-dim": "#c0c4ea",
+                    "on-secondary-fixed-variant": "#3d446b",
+                    "inverse-on-surface": "#f1f1f1",
+                    "on-tertiary-fixed-variant": "#6a3b0e",
+                    "on-tertiary-container": "#ce8f5b",
+                    "outline-variant": "#c7c5ce",
+                    "surface-tint": "#585c7d",
+                    "secondary-fixed-dim": "#bdc4f2",
+                    "surface-container-high": "#e8e8e8",
+                    "on-surface-variant": "#46464d",
+                    "secondary": "#555c84",
+                    "on-primary-fixed": "#141936",
+                    "on-primary-container": "#969abe",
+                    "error": "#ba1a1a",
+                    "tertiary-container": "#532900",
+                    "on-tertiary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed-dim": "#feb880",
+                    "primary": "#181d3a",
+                    "surface-container-low": "#f3f3f3"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "16px",
+                    "xs": "4px",
+                    "md": "16px",
+                    "sm": "8px",
+                    "lg": "24px",
+                    "xl": "32px",
+                    "unit": "4px",
+                    "container-padding": "20px",
+                    "xxl": "48px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Manrope"],
+                    "headline-lg-mobile": ["Manrope"],
+                    "display": ["Manrope"],
+                    "body-lg": ["Manrope"],
+                    "headline-lg": ["Manrope"],
+                    "label-caps": ["JetBrains Mono"],
+                    "body-sm": ["Manrope"],
+                    "body-md": ["Manrope"]
+            },
+            "fontSize": {
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #f9f9f9;
+            color: #1a1c1c;
+            -webkit-font-smoothing: antialiased;
+        }
+        .graph-line {
+            stroke: #c7c5ce;
+            stroke-width: 1;
+            stroke-dasharray: 4;
+        }
+        .markdown-editor::-webkit-scrollbar {
+            width: 4px;
+        }
+        .markdown-editor::-webkit-scrollbar-thumb {
+            background: #e2e2e2;
+            border-radius: 10px;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+        }
+        .node-pulse {
+            animation: pulse 3s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-body-md overflow-hidden h-screen flex flex-col items-center">
+<!-- Top AppBar (Source: JSON) -->
+<header class="fixed top-0 w-full bg-surface dark:bg-surface-dim border-b border-surface-container dark:border-outline-variant shadow-sm dark:shadow-none z-50">
+<div class="flex justify-between items-center px-container-padding h-16 max-w-[768px] mx-auto">
+<div class="flex items-center gap-sm">
+<button class="material-symbols-outlined text-primary hover:bg-surface-container-high transition-colors p-xs rounded-lg active:scale-95 transition-transform">arrow_back</button>
+<h1 class="font-headline-md text-headline-md text-primary truncate max-w-[180px] md:max-w-none">Mindfulness &amp; Goal Setting</h1>
+</div>
+<div class="flex items-center gap-sm">
+<button class="material-symbols-outlined text-primary hover:bg-surface-container-high transition-colors p-xs rounded-lg active:scale-95 transition-transform" title="Attach Image">image</button>
+<button class="material-symbols-outlined text-primary hover:bg-surface-container-high transition-colors p-xs rounded-lg active:scale-95 transition-transform" title="Toggle Graph">hub</button>
+</div>
+</div>
+<!-- Tags bar -->
+<div class="flex items-center gap-xs px-container-padding pb-sm max-w-[768px] mx-auto overflow-x-auto no-scrollbar">
+<span class="px-sm py-[2px] bg-secondary-container text-on-secondary-container text-label-caps font-label-caps rounded-full">#reflection</span>
+<span class="px-sm py-[2px] bg-secondary-container text-on-secondary-container text-label-caps font-label-caps rounded-full">#journal</span>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 w-full max-w-[768px] pt-28 pb-16 px-container-padding overflow-y-auto no-scrollbar flex flex-col gap-md">
+<!-- Interactive Linker Graph Section -->
+<section class="w-full bg-surface-container-lowest border border-surface-container rounded-xl overflow-hidden shadow-sm">
+<div class="p-md flex justify-between items-center border-b border-surface-container">
+<h3 class="font-label-caps text-label-caps text-outline uppercase tracking-wider">Relationship Graph</h3>
+<span class="text-[10px] bg-tertiary-fixed text-on-tertiary-fixed px-xs py-1 rounded font-bold">LIVE</span>
+</div>
+<div class="relative h-48 bg-surface-bright flex items-center justify-center overflow-hidden">
+<svg class="absolute inset-0 w-full h-full" viewbox="0 0 400 200">
+<line class="graph-line" x1="200" x2="100" y1="100" y2="50"></line>
+<line class="graph-line" x1="200" x2="300" y1="100" y2="50"></line>
+<line class="graph-line" x1="200" x2="200" y1="100" y2="160"></line>
+<!-- Nodes -->
+<g class="cursor-pointer">
+<circle cx="100" cy="50" fill="#c8cffe" r="12"></circle>
+<text class="text-[10px] font-label-caps fill-on-surface" text-anchor="middle" x="100" y="32">Daily Reflection</text>
+</g>
+<g class="cursor-pointer">
+<circle cx="300" cy="50" fill="#c8cffe" r="12"></circle>
+<text class="text-[10px] font-label-caps fill-on-surface" text-anchor="middle" x="300" y="32">Habits</text>
+</g>
+<g class="cursor-pointer">
+<circle cx="200" cy="160" fill="#c8cffe" r="12"></circle>
+<text class="text-[10px] font-label-caps fill-on-surface" text-anchor="middle" x="200" y="182">Vision 2026</text>
+</g>
+<g class="cursor-pointer node-pulse">
+<circle cx="200" cy="100" fill="#181d3a" r="16"></circle>
+<text class="text-[11px] font-bold fill-primary" text-anchor="middle" x="200" y="78">Goal Setting</text>
+</g>
+</svg>
+</div>
+</section>
+<!-- Markdown Editor Section -->
+<section class="flex-1 flex flex-col bg-surface-container-lowest border border-surface-container rounded-xl overflow-hidden shadow-sm relative">
+<!-- Formatting Toolbar -->
+<div class="flex items-center gap-xs px-sm py-xs border-b border-surface-container bg-surface-container-low overflow-x-auto no-scrollbar">
+<button class="material-symbols-outlined p-xs text-on-surface-variant hover:bg-surface-container-high rounded transition-colors text-[20px]">format_bold</button>
+<button class="material-symbols-outlined p-xs text-on-surface-variant hover:bg-surface-container-high rounded transition-colors text-[20px]">format_italic</button>
+<button class="material-symbols-outlined p-xs text-on-surface-variant hover:bg-surface-container-high rounded transition-colors text-[20px]">format_h1</button>
+<div class="w-[1px] h-4 bg-outline-variant mx-xs"></div>
+<button class="material-symbols-outlined p-xs text-on-surface-variant hover:bg-surface-container-high rounded transition-colors text-[20px]">add_photo_alternate</button>
+<button class="material-symbols-outlined p-xs text-on-surface-variant hover:bg-surface-container-high rounded transition-colors text-[20px]">link</button>
+<button class="material-symbols-outlined p-xs text-on-surface-variant hover:bg-surface-container-high rounded transition-colors text-[20px]">checklist</button>
+</div>
+<!-- Editor Area -->
+<div class="p-md flex-1 overflow-y-auto markdown-editor relative">
+<div class="absolute top-md right-md flex items-center gap-xs px-sm py-1 rounded bg-surface-container text-outline text-[10px] font-label-caps">
+<span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                    Auto-saved
+                </div>
+<div class="space-y-md">
+<div class="prose max-w-none">
+<p class="font-headline-lg text-headline-lg text-primary mb-sm">Refining the Vision</p>
+<p class="text-on-surface leading-relaxed">
+<span class="text-secondary font-bold"># Growth</span> and <span class="text-secondary font-bold"># Focus</span> are the primary drivers for this month. 
+                            I've noticed that consistency in <span class="bg-secondary-container px-1 rounded">Daily Rituals</span> leads to a significant decrease in cognitive load.
+                        </p>
+<div class="my-md flex flex-col gap-xs">
+<label class="flex items-center gap-sm">
+<input checked="" class="rounded border-outline-variant text-primary focus:ring-0" type="checkbox"/>
+<span class="text-body-md line-through opacity-60">Complete 2026 Vision Board</span>
+</label>
+<label class="flex items-center gap-sm">
+<input class="rounded border-outline-variant text-primary focus:ring-0" type="checkbox"/>
+<span class="text-body-md">Integrate Obsidian-style bidirectional links</span>
+</label>
+</div>
+</div>
+<!-- Attached Image Preview -->
+<div class="group relative rounded-lg overflow-hidden border border-surface-container max-w-sm">
+<img class="w-full aspect-video object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A serene landscape featuring a misty morning lake surrounded by tall pine trees and soft golden sunlight breaking through the clouds. The mood is tranquil and minimalist, with a cool blue and soft green color palette. The aesthetic is clean and high-definition, reflecting a sense of inner peace and clarity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuASVsL0W2pSxecV0V9IkRDgf6URQM4uxFEtHTB6YWM3dwdbjwIUXcQ1Wo_H5attwuUiX_0qgsdkN7BcfLbPbddpgU0ou36yvjur0R5SmgFnhthh9EXCGqx3xfDGRF9UoXLUpVi7zxuzdhtoWPDe9NOGAsuIHqr1MRXJQQm4Rru7yGYB4KlY7o1sCunkAB-cQecmdmOn9qAJYjEIuto9MDNeYY5-T1_J_jk9ves-fYoXO4e2C7qsh0PjQylN_KGNc5oexEuYokBLCHQg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-sm">
+<span class="text-white text-xs font-label-caps">nature-meditation.jpg</span>
+</div>
+<button class="absolute top-sm right-sm bg-white/80 backdrop-blur p-1 rounded-full text-error opacity-0 group-hover:opacity-100 transition-opacity material-symbols-outlined text-[18px]">close</button>
+</div>
+<p class="text-on-surface-variant italic border-l-2 border-primary-container pl-md py-sm">
+                        "The soul usually knows what to do to heal itself. The challenge is to silence the mind."
+                    </p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Metadata Bar -->
+<footer class="fixed bottom-0 left-0 w-full bg-surface/80 backdrop-blur-md border-t border-surface-container dark:border-outline-variant z-50">
+<div class="max-w-[768px] mx-auto px-container-padding h-12 flex items-center justify-between text-label-caps font-label-caps text-on-surface-variant">
+<div class="flex gap-md">
+<span>420 words</span>
+<span>2,400 chars</span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">sync</span>
+<span>Last synced: 2m ago</span>
+</div>
+</div>
+</footer>
+<!-- Bottom NavBar (From JSON - Conditionally Rendered based on flow, kept for global consistency if top-level) -->
+<!-- Suppressed in this Task-Focused screen as per "Contextual FAB Suppression" & "Relevance Check" rules, prioritize the metadata bar -->
+<script>
+        // Micro-interactions
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.classList.add('scale-90');
+                setTimeout(() => this.classList.remove('scale-90'), 100);
+            });
+        });
+
+        // Graph Interaction Logic
+        const nodes = document.querySelectorAll('g');
+        nodes.forEach(node => {
+            node.addEventListener('mouseenter', () => {
+                node.style.filter = 'brightness(1.2)';
+            });
+            node.addEventListener('mouseleave', () => {
+                node.style.filter = 'none';
+            });
+        });
+    </script>
+</body></html>
