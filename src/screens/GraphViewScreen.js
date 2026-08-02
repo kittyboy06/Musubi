@@ -13,6 +13,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../utils/supabase';
 import { theme } from '../utils/theme';
+import FloatingNavBar from '../components/FloatingNavBar';
+import KnowledgeGraph3D from '../components/KnowledgeGraph3D';
 import { fetchNotesFromSupabase } from '../utils/supabaseSync';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -159,46 +161,31 @@ export default function GraphViewScreen({ navigation }) {
         {/* Graph Visualizer Canvas */}
         <View style={styles.graphCanvas}>
           {loading ? (
-            <ActivityIndicator size="large" color={theme.colors.primaryLight} />
-          ) : (
-            <View style={styles.nodeLayer}>
-              {nodes.map((node) => {
-                const isSelected = selectedNode?.id === node.id;
-                const nodeSize = Math.max(38, 38 + node.connections * 5);
-
-                return (
-                  <TouchableOpacity
-                    key={node.id}
-                    activeOpacity={0.8}
-                    onPress={() => setSelectedNode(node)}
-                    style={[
-                      styles.graphNode,
-                      {
-                        left: node.x,
-                        top: node.y,
-                        width: nodeSize,
-                        height: nodeSize,
-                        borderRadius: nodeSize / 2,
-                        borderColor: node.color || theme.colors.primaryLight,
-                      },
-                      isSelected && styles.selectedNodeHalo,
-                    ]}
-                  >
-                    <Ionicons
-                      name="ellipse"
-                      size={Math.min(16, nodeSize * 0.4)}
-                      color={node.color || theme.colors.primaryLight}
-                    />
-                    <Text
-                      style={[styles.nodeLabel, isSelected && styles.selectedNodeLabel]}
-                      numberOfLines={1}
-                    >
-                      {node.title}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+          ) : nodes.length === 0 ? (
+            <View style={styles.emptyStateContainer}>
+              <View style={styles.emptyIconBadge}>
+                <Ionicons name="git-network-outline" size={44} color={theme.colors.primary} />
+              </View>
+              <Text style={styles.emptyTitle}>No Knowledge Graph Nodes Yet</Text>
+              <Text style={styles.emptySubtext}>
+                Create notes with wiki-links like [[Note Title]] to automatically generate an interactive network graph.
+              </Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('VaultExplorer')}
+                style={styles.emptyActionBtn}
+              >
+                <Ionicons name="add" size={18} color="#ffffff" style={{ marginRight: 6 }} />
+                <Text style={styles.emptyActionBtnText}>Create First Note</Text>
+              </TouchableOpacity>
             </View>
+          ) : (
+            <KnowledgeGraph3D
+              nodes={nodes}
+              edges={edges}
+              onSelectNode={setSelectedNode}
+              selectedNode={selectedNode}
+            />
           )}
         </View>
 
@@ -242,29 +229,8 @@ export default function GraphViewScreen({ navigation }) {
             </View>
           </View>
         )}
-        {/* BottomNavBar */}
-        <View style={styles.bottomNavBar}>
-          <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={styles.navItem}>
-            <Ionicons name="home-outline" size={20} color={theme.colors.textSubtle} />
-            <Text style={styles.navText}>HOME</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate('NoteEditor')} style={styles.navItem}>
-            <Ionicons name="create-outline" size={20} color={theme.colors.textSubtle} />
-            <Text style={styles.navText}>JOURNAL</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.navItemActive}>
-            <Ionicons name="stats-chart" size={20} color={theme.colors.primaryLight} />
-            <Text style={styles.navTextActive}>GRAPH</Text>
-            <View style={styles.activeDot} />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate('VaultChat')} style={styles.navItem}>
-            <Ionicons name="chatbubbles-outline" size={20} color={theme.colors.textSubtle} />
-            <Text style={styles.navText}>AI CHAT</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Floating Animated Maroon Navigation Bar */}
+        <FloatingNavBar activeRoute="GraphView" navigation={navigation} />
       </View>
     </View>
   );
@@ -331,14 +297,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: '#16161c',
+    backgroundColor: theme.colors.inputBg,
     marginRight: 8,
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
   pillActive: {
     backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primaryLight,
+    borderColor: theme.colors.primary,
   },
   pillText: {
     fontSize: 12,
@@ -347,12 +313,60 @@ const styles = StyleSheet.create({
   },
   pillTextActive: {
     color: '#ffffff',
+    fontWeight: '700',
   },
   graphCanvas: {
     flex: 1,
-    backgroundColor: '#0d0d10',
+    backgroundColor: '#ffffff',
     position: 'relative',
     overflow: 'hidden',
+  },
+  emptyStateContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    paddingBottom: 110,
+  },
+  emptyIconBadge: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#fff1f2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#fecdd3',
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: theme.colors.text,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubtext: {
+    fontSize: 13,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 20,
+    maxWidth: 320,
+  },
+  emptyActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: theme.borderRadius.md,
+    elevation: 3,
+  },
+  emptyActionBtnText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '700',
   },
   nodeLayer: {
     ...StyleSheet.absoluteFillObject,
@@ -389,20 +403,20 @@ const styles = StyleSheet.create({
   },
   bottomSheet: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    bottom: 88,
+    left: 12,
+    right: 12,
     backgroundColor: theme.colors.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderTopWidth: 1,
+    borderRadius: 20,
+    borderWidth: 1,
     borderColor: theme.colors.border,
     padding: 16,
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 20,
+    zIndex: 1000,
   },
   sheetHeader: {
     flexDirection: 'row',

@@ -16,9 +16,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../utils/supabase';
 import { theme } from '../utils/theme';
+import FloatingNavBar from '../components/FloatingNavBar';
 import {
   fetchChatMessagesFromSupabase,
   saveChatMessageToSupabase,
+  subscribeToRealtimeChat,
 } from '../utils/supabaseSync';
 
 export default function VaultChatScreen({ navigation }) {
@@ -31,7 +33,7 @@ export default function VaultChatScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const flatListRef = useRef(null);
 
-  // Load separate context windows from Supabase on mount
+  // Load separate context windows from Supabase on mount & subscribe to realtime chat updates
   useEffect(() => {
     async function loadChatHistories() {
       setLoadingHistory(true);
@@ -44,6 +46,19 @@ export default function VaultChatScreen({ navigation }) {
       setLoadingHistory(false);
     }
     loadChatHistories();
+
+    const unsubFriend = subscribeToRealtimeChat('friend', (freshMessages) => {
+      setFriendMessages(freshMessages);
+    });
+
+    const unsubTyler = subscribeToRealtimeChat('tyler', (freshMessages) => {
+      setTylerMessages(freshMessages);
+    });
+
+    return () => {
+      unsubFriend();
+      unsubTyler();
+    };
   }, []);
 
   const activeMessages = persona === 'friend' ? friendMessages : tylerMessages;
@@ -303,29 +318,8 @@ export default function VaultChatScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* BottomNavBar */}
-        <View style={styles.bottomNavBar}>
-          <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={styles.navItem}>
-            <Ionicons name="home-outline" size={20} color={theme.colors.textSubtle} />
-            <Text style={styles.navText}>HOME</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate('NoteEditor')} style={styles.navItem}>
-            <Ionicons name="create-outline" size={20} color={theme.colors.textSubtle} />
-            <Text style={styles.navText}>JOURNAL</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate('GraphView')} style={styles.navItem}>
-            <Ionicons name="stats-chart-outline" size={20} color={theme.colors.textSubtle} />
-            <Text style={styles.navText}>GRAPH</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.navItemActive}>
-            <Ionicons name="chatbubbles" size={20} color={theme.colors.primaryLight} />
-            <Text style={styles.navTextActive}>AI CHAT</Text>
-            <View style={styles.activeDot} />
-          </TouchableOpacity>
-        </View>
+        {/* Floating Animated Maroon Navigation Bar */}
+        <FloatingNavBar activeRoute="VaultChat" navigation={navigation} />
       </View>
     </View>
   );
@@ -518,7 +512,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colors.surface,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingTop: 10,
+    paddingBottom: 90,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
   },

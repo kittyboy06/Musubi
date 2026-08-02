@@ -14,11 +14,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../utils/supabase';
 import { theme } from '../utils/theme';
+import FloatingNavBar from '../components/FloatingNavBar';
 import {
   fetchTodosFromSupabase,
   addTodoToSupabase,
   toggleTodoInSupabase,
   fetchNotesFromSupabase,
+  subscribeToRealtimeNotes,
+  subscribeToRealtimeTodos,
 } from '../utils/supabaseSync';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -53,6 +56,25 @@ export default function DashboardScreen({ navigation }) {
       setLoadingTasks(false);
     }
     loadData();
+
+    // Subscribe to realtime database updates across devices
+    const unsubscribeNotes = subscribeToRealtimeNotes((freshNotes) => {
+      setNotesCount(freshNotes.length);
+      const words = freshNotes.reduce((acc, note) => {
+        const text = note.content || note.body || '';
+        return acc + (text.trim() ? text.trim().split(/\s+/).length : 0);
+      }, 0);
+      setTotalWordCount(words);
+    });
+
+    const unsubscribeTodos = subscribeToRealtimeTodos((freshTodos) => {
+      setTasks(freshTodos);
+    });
+
+    return () => {
+      unsubscribeNotes();
+      unsubscribeTodos();
+    };
   }, []);
 
   const completedCount = tasks.filter((t) => t.done).length;
@@ -294,50 +316,29 @@ export default function DashboardScreen({ navigation }) {
               ))
             )}
           </View>
+
+          {/* Quick Vault Launcher (Docked FAB Bar matching Stitch design) */}
+          <View style={styles.fabLauncherBar}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('VaultExplorer')}
+              style={styles.fabPrimaryBtn}
+            >
+              <Ionicons name="book-outline" size={16} color="#ffffff" style={{ marginRight: 6 }} />
+              <Text style={styles.fabPrimaryBtnText}>OBSIDIAN VAULT</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate('VaultChat')}
+              style={styles.fabSecondaryBtn}
+            >
+              <Ionicons name="chatbubble-ellipses-outline" size={16} color={theme.colors.primaryLight} style={{ marginRight: 6 }} />
+              <Text style={styles.fabSecondaryBtnText}>START VAULTCHAT</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
 
-        {/* Quick Vault Launcher (Docked FAB Bar matching Stitch design) */}
-        <View style={styles.fabLauncherBar}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('VaultExplorer')}
-            style={styles.fabPrimaryBtn}
-          >
-            <Ionicons name="book-outline" size={16} color="#ffffff" style={{ marginRight: 6 }} />
-            <Text style={styles.fabPrimaryBtnText}>OBSIDIAN VAULT</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate('VaultChat')}
-            style={styles.fabSecondaryBtn}
-          >
-            <Ionicons name="chatbubble-ellipses-outline" size={16} color={theme.colors.primaryLight} style={{ marginRight: 6 }} />
-            <Text style={styles.fabSecondaryBtnText}>START VAULTCHAT</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* BottomNavBar */}
-        <View style={styles.bottomNavBar}>
-          <TouchableOpacity style={styles.navItemActive}>
-            <Ionicons name="home" size={20} color={theme.colors.primaryLight} />
-            <Text style={styles.navTextActive}>HOME</Text>
-            <View style={styles.activeDot} />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate('VaultExplorer')} style={styles.navItem}>
-            <Ionicons name="create-outline" size={20} color={theme.colors.textSubtle} />
-            <Text style={styles.navText}>JOURNAL</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate('GraphView')} style={styles.navItem}>
-            <Ionicons name="stats-chart-outline" size={20} color={theme.colors.textSubtle} />
-            <Text style={styles.navText}>GRAPH</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate('VaultChat')} style={styles.navItem}>
-            <Ionicons name="chatbubbles-outline" size={20} color={theme.colors.textSubtle} />
-            <Text style={styles.navText}>AI CHAT</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Floating Animated Maroon Navigation Bar */}
+        <FloatingNavBar activeRoute="Dashboard" navigation={navigation} />
       </View>
     </View>
   );
@@ -371,12 +372,10 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#16161c',
+    backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
   },
   brandTitle: {
     fontSize: 18,
@@ -477,7 +476,7 @@ const styles = StyleSheet.create({
   pillStat: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#16161c',
+    backgroundColor: theme.colors.inputBg,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: theme.borderRadius.md,
@@ -675,12 +674,10 @@ const styles = StyleSheet.create({
     transform: [{ translateX: 20 }],
   },
   fabLauncherBar: {
-    position: 'absolute',
-    bottom: 72,
-    left: 20,
-    right: 20,
     flexDirection: 'row',
     justifyContent: 'center',
+    marginTop: 24,
+    marginBottom: 20,
     gap: 10,
   },
   fabPrimaryBtn: {

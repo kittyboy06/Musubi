@@ -13,7 +13,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../utils/theme';
-import { fetchNotesFromSupabase, saveNoteToSupabase } from '../utils/supabaseSync';
+import FloatingNavBar from '../components/FloatingNavBar';
+import { fetchNotesFromSupabase, saveNoteToSupabase, subscribeToRealtimeNotes } from '../utils/supabaseSync';
 
 /**
  * Builds a nested tree structure from flat notes list:
@@ -164,6 +165,14 @@ export default function VaultExplorerScreen({ navigation }) {
       setLoading(false);
     }
     loadVaultNotes();
+
+    const unsubscribe = subscribeToRealtimeNotes((freshNotes) => {
+      setNotes(freshNotes);
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const filteredNotes = useMemo(() => {
@@ -352,29 +361,8 @@ export default function VaultExplorerScreen({ navigation }) {
           </View>
         </Modal>
 
-        {/* BottomNavBar */}
-        <View style={styles.bottomNavBar}>
-          <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={styles.navItem}>
-            <Ionicons name="home-outline" size={20} color={theme.colors.textSubtle} />
-            <Text style={styles.navText}>HOME</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.navItemActive}>
-            <Ionicons name="folder-open" size={20} color={theme.colors.primaryLight} />
-            <Text style={styles.navTextActive}>JOURNAL</Text>
-            <View style={styles.activeDot} />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate('GraphView')} style={styles.navItem}>
-            <Ionicons name="stats-chart-outline" size={20} color={theme.colors.textSubtle} />
-            <Text style={styles.navText}>GRAPH</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate('VaultChat')} style={styles.navItem}>
-            <Ionicons name="chatbubbles-outline" size={20} color={theme.colors.textSubtle} />
-            <Text style={styles.navText}>AI CHAT</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Floating Animated Maroon Navigation Bar */}
+        <FloatingNavBar activeRoute="VaultExplorer" navigation={navigation} />
       </View>
     </SafeAreaView>
   );
@@ -431,7 +419,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 12,
-    backgroundColor: '#16161c',
+    backgroundColor: '#f8fafc',
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
@@ -498,7 +486,7 @@ const styles = StyleSheet.create({
   },
   treeScrollContent: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 110,
   },
   folderRow: {
     flexDirection: 'row',

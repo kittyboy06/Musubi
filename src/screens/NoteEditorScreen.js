@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../utils/supabase';
 import { theme } from '../utils/theme';
+import FloatingNavBar from '../components/FloatingNavBar';
 import { fetchNotesFromSupabase, saveNoteToSupabase } from '../utils/supabaseSync';
 import VaultExplorer from '../components/VaultExplorer';
 
@@ -416,46 +417,24 @@ export default function NoteEditorScreen({ route, navigation }) {
                     </TouchableOpacity>
                   ))}
                 </View>
-              )}
+              {/* Footer Metadata Bar */}
+              <View style={styles.footerBar}>
+                <Text style={styles.footerText}>{wordCount} words</Text>
+                <Text style={styles.footerText}>{charCount} characters</Text>
+                <TouchableOpacity onPress={handleDelete} disabled={deleting}>
+                  {deleting ? (
+                    <ActivityIndicator size="small" color={theme.colors.danger} />
+                  ) : (
+                    <Ionicons name="trash-outline" size={16} color={theme.colors.danger} />
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
           </ScrollView>
         </View>
 
-        {/* Footer Metadata Bar */}
-        <View style={styles.footerBar}>
-          <Text style={styles.footerText}>{wordCount} words</Text>
-          <Text style={styles.footerText}>{charCount} characters</Text>
-          <TouchableOpacity onPress={handleDelete} disabled={deleting}>
-            {deleting ? (
-              <ActivityIndicator size="small" color={theme.colors.danger} />
-            ) : (
-              <Ionicons name="trash-outline" size={16} color={theme.colors.danger} />
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Bottom Navigation Bar */}
-        <View style={styles.bottomNavBar}>
-          <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} style={styles.navItem}>
-            <Ionicons name="home-outline" size={20} color={theme.colors.textSubtle} />
-            <Text style={styles.navText}>HOME</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate('VaultExplorer')} style={styles.navItem}>
-            <Ionicons name="folder-open-outline" size={20} color={theme.colors.textSubtle} />
-            <Text style={styles.navText}>JOURNAL</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate('GraphView')} style={styles.navItem}>
-            <Ionicons name="stats-chart-outline" size={20} color={theme.colors.textSubtle} />
-            <Text style={styles.navText}>GRAPH</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate('VaultChat')} style={styles.navItem}>
-            <Ionicons name="chatbubbles-outline" size={20} color={theme.colors.textSubtle} />
-            <Text style={styles.navText}>AI CHAT</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Floating Animated Maroon Navigation Bar */}
+        <FloatingNavBar activeRoute="NoteEditor" navigation={navigation} />
       </View>
     </SafeAreaView>
   );
@@ -561,7 +540,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 60,
+    paddingBottom: 110,
   },
   graphSectionCard: {
     backgroundColor: theme.colors.surface,
