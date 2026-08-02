@@ -17,13 +17,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../utils/supabase';
 import { theme } from '../utils/theme';
 import FloatingNavBar from '../components/FloatingNavBar';
+import { useAppTheme } from '../utils/ThemeContext';
+import { generateRagResponse } from '../utils/ragEngine';
 import {
   fetchChatMessagesFromSupabase,
   saveChatMessageToSupabase,
   subscribeToRealtimeChat,
+  fetchNotesFromSupabase,
 } from '../utils/supabaseSync';
 
 export default function VaultChatScreen({ navigation }) {
+  const { activeTheme } = useAppTheme();
   const [persona, setPersona] = useState('friend'); // 'friend' or 'tyler'
   const [friendMessages, setFriendMessages] = useState([]);
   const [tylerMessages, setTylerMessages] = useState([]);
@@ -89,36 +93,16 @@ export default function VaultChatScreen({ navigation }) {
     setLoading(true);
 
     try {
-      // Supabase edge function or Gemini API call
-      const { data, error } = await supabase.functions.invoke('chat-vault', {
-        body: {
-          prompt: userText,
-          persona: persona,
-        },
-      });
-
-      let aiReplyText = '';
-      let refTitle = 'Journal Vault';
-
-      if (!error && data?.reply) {
-        aiReplyText = data.reply;
-        refTitle = data.referencedNoteTitle || 'Journal Vault';
-      } else {
-        // Fallback separate persona responses
-        if (persona === 'friend') {
-          aiReplyText = `I completely understand how you feel about "${userText}". Take a moment, celebrate your efforts, and we will tackle the next step together!`;
-          refTitle = 'Daily Reflection';
-        } else {
-          aiReplyText = `Stop letting "${userText}" control your narrative! You are not your job, your tasks, or your output. Take bold action today!`;
-          refTitle = 'Habits Note';
-        }
-      }
+      // Execute Dynamic Grounded RAG Retrieval & Response Generation across ALL files & tasks
+      const ragResult = await generateRagResponse(userText, persona);
 
       const aiMsg = {
         id: (Date.now() + 1).toString(),
         sender: persona,
-        text: aiReplyText,
-        reference: refTitle,
+        text: ragResult.reply,
+        citedNotes: ragResult.citedNotes || [],
+        citedTasks: ragResult.citedTasks || [],
+        reference: ragResult.citedNotes && ragResult.citedNotes.length > 0 ? ragResult.citedNotes[0].title : 'Obsidian Vault Knowledge Base',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
@@ -130,7 +114,7 @@ export default function VaultChatScreen({ navigation }) {
 
       saveChatMessageToSupabase(persona, aiMsg);
     } catch (err) {
-      console.warn('VaultChat call warning:', err);
+      console.warn('VaultChat RAG error:', err);
     } finally {
       setLoading(false);
     }
@@ -186,13 +170,31 @@ export default function VaultChatScreen({ navigation }) {
           <Text style={styles.aiMsgText}>{item.text}</Text>
         </View>
 
-        {/* Referenced Context Badge */}
-        {item.reference && (
+        {/* Referenced Context Badge & RAG Sources */}
+        {item.citedNotes && item.citedNotes.length > 0 ? (
+          <View style={styles.ragContainer}>
+            <Text style={styles.ragHeaderTitle}>📚 RETRIEVED RAG SOURCES:</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexDirection: 'row', marginTop: 4 }}>
+              {item.citedNotes.map((note) => (
+                <TouchableOpacity
+                  key={note.id || note.title}
+                  onPress={() => navigation.navigate('NoteEditor', { note })}
+                  style={[styles.ragPill, { borderColor: activeTheme.primaryLight }]}
+                >
+                  <Ionicons name="document-text" size={12} color={activeTheme.primary} style={{ marginRight: 4 }} />
+                  <Text style={[styles.ragPillText, { color: activeTheme.primary }]} numberOfLines={1}>
+                    {note.title}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        ) : item.reference ? (
           <View style={styles.referenceBadge}>
-            <Ionicons name="document-text-outline" size={12} color={theme.colors.primaryLight} style={{ marginRight: 4 }} />
+            <Ionicons name="document-text-outline" size={12} color={activeTheme.primaryLight} style={{ marginRight: 4 }} />
             <Text style={styles.referenceText}>Referenced: {item.reference}</Text>
           </View>
-        )}
+        ) : null}
       </View>
     );
   };
@@ -512,10 +514,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colors.surface,
     paddingHorizontal: 14,
-    paddingTop: 10,
-    paddingBottom: 90,
+    paddingVertical: 10,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
+    marginBottom: 75,
   },
   attachBtn: {
     width: 36,
@@ -609,5 +611,35 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     backgroundColor: theme.colors.primaryLight,
+  },
+  ragContainer: {
+    marginTop: 6,
+    marginLeft: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderRadius: theme.borderRadius.sm,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  ragHeaderTitle: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: theme.colors.textSubtle,
+    letterSpacing: 0.5,
+  },
+  ragPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    marginRight: 6,
+    maxWidth: 160,
+  },
+  ragPillText: {
+    fontSize: 10,
+    fontWeight: '700',
   },
 });

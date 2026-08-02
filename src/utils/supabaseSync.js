@@ -39,6 +39,7 @@ export async function fetchTodosFromSupabase() {
         priority: t.priority || 'MEDIUM',
         tag: t.tag || '#TODAY',
         done: !!t.done || !!t.completed,
+        due_date: t.due_date || t.due_at || null,
       }));
       AsyncStorage.setItem(LOCAL_TODOS_KEY, JSON.stringify(formatted)).catch(() => {});
       return formatted;
@@ -67,9 +68,11 @@ export async function addTodoToSupabase(task) {
         {
           user_id: userId,
           title: task.title,
+          text: task.title,
           priority: task.priority || 'MEDIUM',
           tag: task.tag || '#TODAY',
           done: false,
+          due_date: task.due_date || null,
           created_at: timestamp,
           updated_at: timestamp,
         },
@@ -82,6 +85,24 @@ export async function addTodoToSupabase(task) {
   } catch (err) {}
 
   return newTask;
+}
+
+export async function updateTodoDueDateInSupabase(id, dueDate) {
+  try {
+    const raw = await AsyncStorage.getItem(LOCAL_TODOS_KEY);
+    if (raw) {
+      const list = JSON.parse(raw);
+      const updated = list.map((t) => (t.id === id ? { ...t, due_date: dueDate } : t));
+      await AsyncStorage.setItem(LOCAL_TODOS_KEY, JSON.stringify(updated));
+    }
+  } catch (e) {}
+
+  try {
+    await supabase
+      .from('todos')
+      .update({ due_date: dueDate, updated_at: new Date().toISOString() })
+      .eq('id', id);
+  } catch (err) {}
 }
 
 export async function toggleTodoInSupabase(id, doneStatus) {
@@ -98,6 +119,24 @@ export async function toggleTodoInSupabase(id, doneStatus) {
     await supabase
       .from('todos')
       .update({ done: doneStatus, updated_at: new Date().toISOString() })
+      .eq('id', id);
+  } catch (err) {}
+}
+
+export async function updateTodoPriorityInSupabase(id, priority) {
+  try {
+    const raw = await AsyncStorage.getItem(LOCAL_TODOS_KEY);
+    if (raw) {
+      const list = JSON.parse(raw);
+      const updated = list.map((t) => (t.id === id ? { ...t, priority } : t));
+      await AsyncStorage.setItem(LOCAL_TODOS_KEY, JSON.stringify(updated));
+    }
+  } catch (e) {}
+
+  try {
+    await supabase
+      .from('todos')
+      .update({ priority, updated_at: new Date().toISOString() })
       .eq('id', id);
   } catch (err) {}
 }
@@ -331,6 +370,43 @@ export function subscribeToRealtimeNotes(onUpdate) {
   } catch (err) {
     console.warn('Realtime notes subscription error:', err);
     return () => {};
+  }
+}
+
+/**
+ * Upload Image to Supabase Storage bucket 'vault-images' and return public CDN URL
+ */
+export async function uploadImageToSupabaseStorage(fileBlobOrUri, fileName) {
+  try {
+    const cleanFileName = `${Date.now()}_${fileName ? fileName.replace(/[^a-zA-Z0-9._-]/g, '') : 'note_image.png'}`;
+    const filePath = `notes/${cleanFileName}`;
+
+    let uploadBody = fileBlobOrUri;
+    if (typeof fileBlobOrUri === 'string' && fileBlobOrUri.startsWith('data:')) {
+      const response = await fetch(fileBlobOrUri);
+      uploadBody = await response.blob();
+    }
+
+    const { data, error } = await supabase.storage
+      .from('vault-images')
+      .upload(filePath, uploadBody, {
+        contentType: typeof uploadBody === 'object' && uploadBody.type ? uploadBody.type : 'image/png',
+        upsert: true,
+      });
+
+    if (error) {
+      console.warn('Supabase storage upload error:', error);
+      return fileBlobOrUri;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from('vault-images')
+      .getPublicUrl(filePath);
+
+    return publicUrlData?.publicUrl || fileBlobOrUri;
+  } catch (err) {
+    console.warn('uploadImageToSupabaseStorage exception:', err);
+    return fileBlobOrUri;
   }
 }
 

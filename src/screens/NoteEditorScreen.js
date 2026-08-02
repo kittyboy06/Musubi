@@ -13,18 +13,21 @@ import {
   ScrollView,
   Image,
   Dimensions,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../utils/supabase';
 import { theme } from '../utils/theme';
 import FloatingNavBar from '../components/FloatingNavBar';
-import { fetchNotesFromSupabase, saveNoteToSupabase } from '../utils/supabaseSync';
+import { useAppTheme } from '../utils/ThemeContext';
+import { fetchNotesFromSupabase, saveNoteToSupabase, uploadImageToSupabaseStorage } from '../utils/supabaseSync';
 import VaultExplorer from '../components/VaultExplorer';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function NoteEditorScreen({ route, navigation }) {
+  const { activeTheme } = useAppTheme();
   const routeNote = route.params?.note;
 
   const [notesList, setNotesList] = useState([]);
@@ -39,6 +42,13 @@ export default function NoteEditorScreen({ route, navigation }) {
   const [showGraphSection, setShowGraphSection] = useState(false);
   const [attachedImage, setAttachedImage] = useState(null);
   const [backlinks, setBacklinks] = useState([]);
+  const [selection, setSelection] = useState({ start: 0, end: 0 });
+
+  // Custom Dark Modals State (No Browser Default Popups)
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkTitleInput, setLinkTitleInput] = useState('');
+  const [linkUrlInput, setLinkUrlInput] = useState('https://');
 
   const saveTimerRef = useRef(null);
 
@@ -84,18 +94,17 @@ export default function NoteEditorScreen({ route, navigation }) {
           setBacklinks(matched);
         }
       } catch (err) {
-        console.warn('Backlinks fetch error:', err);
+        console.warn('Fetch backlinks error:', err);
       }
     };
 
     fetchBacklinks();
   }, [title, activeNoteId, notesList]);
 
-  // 3. Auto Save Active Note
+  // Debounced auto-save function
   const triggerAutoSave = useCallback(
     (newTitle, newContent, newFolderPath) => {
       setSaveStatus('unsaved');
-
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
 
       saveTimerRef.current = setTimeout(async () => {
@@ -184,38 +193,132 @@ export default function NoteEditorScreen({ route, navigation }) {
     triggerAutoSave(title, text, folderPath);
   };
 
-  const insertMarkdown = (snippet) => {
-    const updated = content + (content.length > 0 && !content.endsWith('\n') ? '\n' : '') + snippet;
+  const insertAtCursor = (textToInsert) => {
+    const start = selection.start ?? content.length;
+    const end = selection.end ?? content.length;
+    const before = content.substring(0, start);
+    const after = content.substring(end);
+    const updated = before + textToInsert + after;
     setContent(updated);
     triggerAutoSave(title, updated, folderPath);
   };
 
-  const handleDelete = async () => {
+  const applyFormatting = (type) => {
+    const start = selection.start ?? content.length;
+    const end = selection.end ?? content.length;
+    const selectedText = content.substring(start, end);
+    const before = content.substring(0, start);
+    const after = content.substring(end);
+
+    let replacement = '';
+
+    switch (type) {
+      case 'bold':
+        replacement = selectedText ? `**${selectedText}**` : '**bold text**';
+        break;
+      case 'italic':
+        replacement = selectedText ? `*${selectedText}*` : '*italic text*';
+        break;
+      case 'h1':
+        replacement = before.endsWith('\n') || start === 0 ? '# ' : '\n# ';
+        break;
+      case 'h2':
+        replacement = before.endsWith('\n') || start === 0 ? '## ' : '\n## ';
+        break;
+      case 'link':
+        setLinkTitleInput(selectedText || 'Link Title');
+        setLinkUrlInput('https://');
+        setShowLinkModal(true);
+        return;
+      case 'checkbox':
+        replacement = before.endsWith('\n') || start === 0 ? '- [ ] ' : '\n- [ ] ';
+        break;
+      case 'quote':
+        replacement = before.endsWith('\n') || start === 0 ? '> ' : '\n> ';
+        break;
+      default:
+        replacement = type;
+    }
+
+    const updated = before + replacement + after;
+    setContent(updated);
+    triggerAutoSave(title, updated, folderPath);
+  };
+
+  const confirmInsertLink = () => {
+    setShowLinkModal(false);
+    const titleText = linkTitleInput.trim() || 'Link Title';
+    const urlText = linkUrlInput.trim();
+    let replacement = '';
+    if (urlText && (urlText.startsWith('http://') || urlText.startsWith('https://'))) {
+      replacement = `[${titleText}](${urlText})`;
+    } else if (urlText) {
+      replacement = `[[${urlText}]]`;
+    } else {
+      replacement = `[[${titleText}]]`;
+    }
+    insertAtCursor(replacement);
+  };
+
+  const handlePickImage = () => {
+    if (Platform.OS === 'web') {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = async () => {
+            const dataUrl = reader.result;
+            setSaveStatus('saving');
+            const publicCdnUrl = await uploadImageToSupabaseStorage(dataUrl, file.name);
+            setAttachedImage(publicCdnUrl);
+            const imageMarkdown = `\n\n![${file.name}](${publicCdnUrl})\n\n`;
+            insertAtCursor(imageMarkdown);
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+      input.click();
+    } else {
+      setLinkTitleInput('Attached Image');
+      setLinkUrlInput('');
+      setShowLinkModal(true);
+    }
+  };
+
+  const insertMarkdown = (syntax) => {
+    insertAtCursor(syntax);
+  };
+
+  const handleDelete = () => {
+    if (!activeNoteId) return;
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteNote = async () => {
     if (!activeNoteId) return;
 
-    Alert.alert('Delete Note', `Delete "${title}" from your vault?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          setDeleting(true);
-          await supabase.from('notes').delete().eq('id', activeNoteId);
-          setDeleting(false);
+    setDeleting(true);
+    try {
+      await supabase.from('notes').delete().eq('id', activeNoteId);
+      const remaining = notesList.filter((n) => n.id !== activeNoteId);
+      setNotesList(remaining);
 
-          const remaining = notesList.filter((n) => n.id !== activeNoteId);
-          setNotesList(remaining);
-
-          if (remaining.length > 0) {
-            handleSelectNote(remaining[0]);
-          } else {
-            setActiveNoteId(null);
-            setTitle('');
-            setContent('');
-          }
-        },
-      },
-    ]);
+      if (remaining.length > 0) {
+        handleSelectNote(remaining[0]);
+      } else {
+        setActiveNoteId(null);
+        setTitle('');
+        setContent('');
+      }
+    } catch (err) {
+      console.warn('Delete error:', err);
+    } finally {
+      setDeleting(false);
+      setShowDeleteModal(false);
+    }
   };
 
   const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
@@ -293,7 +396,13 @@ export default function NoteEditorScreen({ route, navigation }) {
         {/* Main Body */}
         <View style={styles.mainBody}>
           {/* Editor Workspace */}
-          <ScrollView style={styles.scrollBody} contentContainerStyle={styles.scrollContent}>
+          <ScrollView
+            style={styles.scrollBody}
+            contentContainerStyle={[
+              styles.scrollContent,
+              backlinks.length > 0 && { paddingBottom: 310 },
+            ]}
+          >
             {/* Relationship Graph Section (Optional) */}
             {showGraphSection && (
               <TouchableOpacity
@@ -334,27 +443,38 @@ export default function NoteEditorScreen({ route, navigation }) {
               {/* Formatting Toolbar */}
               <View style={styles.toolbar}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <TouchableOpacity onPress={() => insertMarkdown('**bold**')} style={styles.toolItem}>
+                  <TouchableOpacity onPress={() => applyFormatting('bold')} style={styles.toolItem}>
                     <Text style={[styles.toolText, { fontWeight: '800' }]}>B</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => insertMarkdown('*italic*')} style={styles.toolItem}>
-                    <Text style={[styles.toolText, { fontStyle: 'italic' }]}>I</Text>
+                  <TouchableOpacity onPress={() => applyFormatting('italic')} style={styles.toolItem}>
+                    <Text style={[styles.toolText, { fontStyle: 'italic', fontWeight: '700' }]}>/</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => insertMarkdown('# ')} style={styles.toolItem}>
+                  <TouchableOpacity onPress={() => applyFormatting('h1')} style={styles.toolItem}>
                     <Text style={styles.toolText}>H1</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => insertMarkdown('## ')} style={styles.toolItem}>
+                  <TouchableOpacity onPress={() => applyFormatting('h2')} style={styles.toolItem}>
                     <Text style={styles.toolText}>H2</Text>
                   </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handlePickImage}
+                    style={[styles.toolItem, { backgroundColor: activeTheme.primary, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10 }]}
+                  >
+                    <Ionicons name="image-outline" size={15} color="#ffffff" />
+                    <Text style={{ color: '#ffffff', fontSize: 11, fontWeight: '700', marginLeft: 4 }}>Image</Text>
+                  </TouchableOpacity>
                   <View style={styles.toolDivider} />
-                  <TouchableOpacity onPress={() => insertMarkdown('[[Link]]')} style={styles.toolItem}>
+                  <TouchableOpacity onPress={() => applyFormatting('link')} style={styles.toolItem}>
                     <Ionicons name="link-outline" size={16} color={theme.colors.primaryLight} />
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => insertMarkdown('- [ ] ')} style={styles.toolItem}>
+                  <TouchableOpacity onPress={() => applyFormatting('checkbox')} style={styles.toolItem}>
                     <Ionicons name="checkbox-outline" size={16} color={theme.colors.primaryLight} />
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => insertMarkdown('> ')} style={styles.toolItem}>
+                  <TouchableOpacity onPress={() => applyFormatting('quote')} style={styles.toolItem}>
                     <Ionicons name="chatbox-ellipses-outline" size={16} color={theme.colors.primaryLight} />
+                  </TouchableOpacity>
+                  <View style={styles.toolDivider} />
+                  <TouchableOpacity onPress={handleDelete} disabled={deleting} style={[styles.toolItem, { backgroundColor: 'rgba(225, 29, 72, 0.15)' }]}>
+                    <Ionicons name="trash-outline" size={15} color={theme.colors.danger} />
                   </TouchableOpacity>
                 </ScrollView>
               </View>
@@ -374,49 +494,15 @@ export default function NoteEditorScreen({ route, navigation }) {
                 <TextInput
                   value={content}
                   onChangeText={handleContentChange}
+                  onSelectionChange={(e) => setSelection(e.nativeEvent.selection)}
                   placeholder="Write your markdown thoughts here..."
                   placeholderTextColor={theme.colors.textSubtle}
                   multiline
                   style={styles.bodyInput}
                   textAlignVertical="top"
                 />
-
-                {/* Attached Image Preview */}
-                {attachedImage && (
-                  <View style={styles.imagePreviewCard}>
-                    <Image source={{ uri: attachedImage }} style={styles.previewImage} />
-                    <TouchableOpacity
-                      onPress={() => setAttachedImage(null)}
-                      style={styles.removeImageBtn}
-                    >
-                      <Ionicons name="close" size={14} color="#ffffff" />
-                    </TouchableOpacity>
-                  </View>
-                )}
               </View>
 
-              {/* Obsidian Backlinks Section */}
-              {backlinks.length > 0 && (
-                <View style={styles.backlinksContainer}>
-                  <Text style={styles.backlinksHeaderTitle}>Linked Vault References ({backlinks.length})</Text>
-                  {backlinks.map((bl) => (
-                    <TouchableOpacity
-                      key={bl.id}
-                      onPress={() => handleSelectNote(bl)}
-                      style={styles.backlinkCard}
-                    >
-                      <View style={styles.backlinkTitleRow}>
-                        <Ionicons name="document-text-outline" size={14} color={theme.colors.primaryLight} />
-                        <Text style={styles.backlinkTitle}>
-                          {bl.folder_path ? `${bl.folder_path}/${bl.title}` : bl.title}
-                        </Text>
-                      </View>
-                      <Text style={styles.backlinkSnippet} numberOfLines={2}>
-                        {bl.content}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
               {/* Footer Metadata Bar */}
               <View style={styles.footerBar}>
                 <Text style={styles.footerText}>{wordCount} words</Text>
@@ -432,6 +518,133 @@ export default function NoteEditorScreen({ route, navigation }) {
             </View>
           </ScrollView>
         </View>
+
+        {/* Pinned Obsidian Backlinks Section Above Navbar */}
+        {backlinks.length > 0 && (
+          <View style={styles.pinnedBacklinksCard}>
+            <View style={styles.pinnedBacklinksHeader}>
+              <Ionicons name="git-network-outline" size={14} color={theme.colors.primaryLight} />
+              <Text style={styles.pinnedBacklinksTitle}>
+                LINKED VAULT REFERENCES ({backlinks.length})
+              </Text>
+            </View>
+            <ScrollView style={styles.pinnedBacklinksScroll} nestedScrollEnabled showsVerticalScrollIndicator={false}>
+              {backlinks.map((bl) => (
+                <TouchableOpacity
+                  key={bl.id}
+                  onPress={() => handleSelectNote(bl)}
+                  style={styles.backlinkCard}
+                >
+                  <View style={styles.backlinkTitleRow}>
+                    <Ionicons name="document-text-outline" size={14} color={theme.colors.primaryLight} />
+                    <Text style={styles.backlinkTitle}>
+                      {bl.folder_path ? `${bl.folder_path}/${bl.title}` : bl.title}
+                    </Text>
+                  </View>
+                  <Text style={styles.backlinkSnippet} numberOfLines={2}>
+                    {bl.content}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Custom Delete Confirmation Modal */}
+        <Modal
+          visible={showDeleteModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowDeleteModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.customModalCard}>
+              <View style={styles.modalHeaderRow}>
+                <View style={styles.modalIconWrap}>
+                  <Ionicons name="trash-bin-outline" size={22} color="#f43f5e" />
+                </View>
+                <Text style={styles.modalHeaderTitle}>Delete Note</Text>
+              </View>
+              <Text style={styles.modalBodyMessage}>
+                Are you sure you want to delete <Text style={{ fontWeight: '800', color: '#fb7185' }}>"{title}"</Text> from your vault?
+              </Text>
+              <Text style={styles.modalSubMessage}>
+                This will permanently remove the note from your local vault and Supabase cloud database.
+              </Text>
+              <View style={styles.modalActionRow}>
+                <TouchableOpacity
+                  onPress={() => setShowDeleteModal(false)}
+                  style={styles.modalCancelBtn}
+                >
+                  <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={confirmDeleteNote}
+                  disabled={deleting}
+                  style={styles.modalDeleteBtn}
+                >
+                  {deleting ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <Text style={styles.modalDeleteBtnText}>Delete Note</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Custom Insert Link Modal */}
+        <Modal
+          visible={showLinkModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowLinkModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.customModalCard}>
+              <View style={styles.modalHeaderRow}>
+                <View style={[styles.modalIconWrap, { backgroundColor: 'rgba(225, 29, 72, 0.15)' }]}>
+                  <Ionicons name="link-outline" size={20} color={theme.colors.primaryLight} />
+                </View>
+                <Text style={styles.modalHeaderTitle}>Insert Link</Text>
+              </View>
+
+              <Text style={styles.inputLabel}>Link Title / Text:</Text>
+              <TextInput
+                value={linkTitleInput}
+                onChangeText={setLinkTitleInput}
+                placeholder="e.g. My Note or Web Link..."
+                placeholderTextColor={theme.colors.textSubtle}
+                style={styles.modalTextInput}
+              />
+
+              <Text style={styles.inputLabel}>URL or Vault Note Title:</Text>
+              <TextInput
+                value={linkUrlInput}
+                onChangeText={setLinkUrlInput}
+                placeholder="e.g. https://google.com or Daily Notes..."
+                placeholderTextColor={theme.colors.textSubtle}
+                style={styles.modalTextInput}
+              />
+
+              <View style={styles.modalActionRow}>
+                <TouchableOpacity
+                  onPress={() => setShowLinkModal(false)}
+                  style={styles.modalCancelBtn}
+                >
+                  <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={confirmInsertLink}
+                  style={styles.modalConfirmBtn}
+                >
+                  <Text style={styles.modalConfirmBtnText}>Insert Link</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         {/* Floating Animated Maroon Navigation Bar */}
         <FloatingNavBar activeRoute="NoteEditor" navigation={navigation} />
@@ -449,6 +662,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     height: '100%',
+    position: 'relative',
   },
   header: {
     flexDirection: 'row',
@@ -659,10 +873,29 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   bodyInput: {
-    fontSize: 15,
+    fontSize: 16,
     color: theme.colors.text,
-    lineHeight: 22,
-    minHeight: 250,
+    lineHeight: 24,
+    minHeight: 480,
+  },
+  attachImageBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#16161c',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderStyle: 'dashed',
+    marginTop: 14,
+  },
+  attachImageText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.colors.primaryLight,
+    marginLeft: 8,
   },
   imagePreviewCard: {
     marginTop: 14,
@@ -687,17 +920,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  backlinksContainer: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+  pinnedBacklinksCard: {
+    position: 'absolute',
+    bottom: 125,
+    left: 16,
+    right: 16,
     backgroundColor: '#16161c',
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1.5,
+    borderColor: '#881337',
+    padding: 8,
+    maxHeight: 110,
+    overflow: 'hidden',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
+    zIndex: 900,
   },
-  backlinksHeaderTitle: {
-    fontSize: 12,
+  pinnedBacklinksHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  pinnedBacklinksTitle: {
+    fontSize: 10,
     fontWeight: '800',
-    color: theme.colors.primaryLight,
-    marginBottom: 8,
+    color: '#fb7185',
+    marginLeft: 6,
+    letterSpacing: 0.6,
+  },
+  pinnedBacklinksScroll: {
+    maxHeight: 52,
   },
   backlinkCard: {
     backgroundColor: theme.colors.surface,
@@ -774,5 +1032,117 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     backgroundColor: theme.colors.primaryLight,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    zIndex: 2000,
+  },
+  customModalCard: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#16161c',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#881337',
+    padding: 20,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    elevation: 20,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  modalIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(244, 63, 94, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  modalHeaderTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 0.5,
+  },
+  modalBodyMessage: {
+    fontSize: 14,
+    color: '#e2e8f0',
+    lineHeight: 22,
+    marginBottom: 8,
+  },
+  modalSubMessage: {
+    fontSize: 12,
+    color: '#94a3b8',
+    lineHeight: 18,
+    marginBottom: 18,
+  },
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#fb7185',
+    marginBottom: 6,
+    marginTop: 4,
+  },
+  modalTextInput: {
+    backgroundColor: '#1f1f2e',
+    borderWidth: 1,
+    borderColor: '#475569',
+    borderRadius: theme.borderRadius.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: '#ffffff',
+    marginBottom: 12,
+  },
+  modalActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginTop: 14,
+  },
+  modalCancelBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    marginRight: 10,
+  },
+  modalCancelBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#cbd5e1',
+  },
+  modalDeleteBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: '#e11d48',
+  },
+  modalDeleteBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
+  modalConfirmBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: '#881337',
+  },
+  modalConfirmBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#ffffff',
   },
 });

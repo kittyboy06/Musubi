@@ -2,8 +2,10 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../utils/theme';
+import { useAppTheme } from '../utils/ThemeContext';
 
 export default function KnowledgeGraph3D({ nodes, edges, onSelectNode, selectedNode }) {
+  const { activeTheme } = useAppTheme();
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const reqIdRef = useRef(null);
@@ -18,7 +20,7 @@ export default function KnowledgeGraph3D({ nodes, edges, onSelectNode, selectedN
   const nodes3D = useMemo(() => {
     if (!nodes || nodes.length === 0) return [];
     const total = nodes.length;
-    const sphereRadius = 220;
+    const sphereRadius = 180;
 
     return nodes.map((node, idx) => {
       // 3D Fibonacci sphere algorithm
@@ -29,9 +31,9 @@ export default function KnowledgeGraph3D({ nodes, edges, onSelectNode, selectedN
       const y = sphereRadius * Math.sin(phi) * Math.sin(theta);
       const z = sphereRadius * Math.cos(phi);
 
-      const isCore = node.title.toLowerCase().includes('afsal') || node.connections > 2;
+      const isCore = (node.title || '').toLowerCase().includes('afsal') || (node.connections || 0) > 2;
       const baseRadius = isCore ? 14 : Math.max(9, 9 + (node.connections || 0) * 1.5);
-      const color = isCore ? '#881337' : node.connections > 1 ? '#8b5cf6' : '#2563eb';
+      const color = isCore ? activeTheme.primary : node.connections > 1 ? activeTheme.primaryLight : '#3b82f6';
 
       return {
         ...node,
@@ -42,13 +44,12 @@ export default function KnowledgeGraph3D({ nodes, edges, onSelectNode, selectedN
         color,
       };
     });
-  }, [nodes]);
+  }, [nodes, activeTheme]);
 
   // 3D Energy pulse particles along links
   const pulseParticlesRef = useRef([]);
 
   useEffect(() => {
-    // Initialize energy pulses along 3D edges
     if (!edges || edges.length === 0) return;
     const particles = [];
     edges.forEach((edge, i) => {
@@ -70,8 +71,8 @@ export default function KnowledgeGraph3D({ nodes, edges, onSelectNode, selectedN
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let width = containerRef.current.clientWidth || 360;
-    let height = containerRef.current.clientHeight || 450;
+    let width = containerRef.current.clientWidth || window.innerWidth || 360;
+    let height = containerRef.current.clientHeight || 500;
     canvas.width = width;
     canvas.height = height;
 
@@ -84,15 +85,19 @@ export default function KnowledgeGraph3D({ nodes, edges, onSelectNode, selectedN
     const render3DScene = () => {
       reqIdRef.current = requestAnimationFrame(render3DScene);
 
-      // Gentle auto-rotation when user is idle
+      // Gentle auto-rotation when idle
       if (!isDraggingRef.current) {
         rotYRef.current += 0.003;
       }
 
       ctx.clearRect(0, 0, width, height);
 
+      // Dark network background
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, width, height);
+
       // Draw subtle background grid ambient dots
-      ctx.fillStyle = 'rgba(226, 232, 240, 0.4)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
       for (let gx = 20; gx < width; gx += 40) {
         for (let gy = 20; gy < height; gy += 40) {
           ctx.beginPath();
@@ -109,20 +114,17 @@ export default function KnowledgeGraph3D({ nodes, edges, onSelectNode, selectedN
       // 1. Transform 3D coordinates for all nodes
       const nodePosMap = new Map();
       projectedNodes = nodes3D.map((node) => {
-        // Rotate around Y axis
         let x1 = node.x3D * cosY - node.z3D * sinY;
         let z1 = node.z3D * cosY + node.x3D * sinY;
 
-        // Rotate around X axis
         let y2 = node.y3D * cosX - z1 * sinX;
         let z2 = z1 * cosX + node.y3D * sinX;
 
-        // 3D Perspective Projection
         const scale = focalLength / (focalLength + z2 + 200);
         const projX = centerX + x1 * scale;
         const projY = centerY + y2 * scale;
-        const projRadius = Math.max(3, node.baseRadius * scale);
-        const alpha = Math.max(0.2, Math.min(1, (z2 + 200) / 400));
+        const projRadius = Math.max(4, node.baseRadius * scale);
+        const alpha = Math.max(0.3, Math.min(1, (z2 + 250) / 450));
 
         const projected = {
           ...node,
@@ -138,7 +140,6 @@ export default function KnowledgeGraph3D({ nodes, edges, onSelectNode, selectedN
         return projected;
       });
 
-      // Depth sort nodes so closer elements render over farther ones
       projectedNodes.sort((a, b) => a.zDepth - b.zDepth);
 
       // 2. Render 3D Connecting Link Lines
@@ -154,12 +155,12 @@ export default function KnowledgeGraph3D({ nodes, edges, onSelectNode, selectedN
           ctx.lineTo(target.projX, target.projY);
 
           if (isSelectedLink) {
-            ctx.strokeStyle = '#881337';
+            ctx.strokeStyle = activeTheme.primaryLight;
             ctx.lineWidth = 2.5;
-            ctx.shadowColor = '#881337';
+            ctx.shadowColor = activeTheme.primaryLight;
             ctx.shadowBlur = 8;
           } else {
-            ctx.strokeStyle = `rgba(148, 163, 184, ${Math.min(source.alpha, target.alpha) * 0.5})`;
+            ctx.strokeStyle = `rgba(148, 163, 184, ${Math.min(source.alpha, target.alpha) * 0.4})`;
             ctx.lineWidth = 1.2;
             ctx.shadowBlur = 0;
           }
@@ -183,24 +184,22 @@ export default function KnowledgeGraph3D({ nodes, edges, onSelectNode, selectedN
 
           ctx.beginPath();
           ctx.arc(px, py, 3 * particleScale, 0, Math.PI * 2);
-          ctx.fillStyle = '#881337';
+          ctx.fillStyle = activeTheme.primaryLight;
           ctx.fill();
         }
       });
 
-      // 4. Render 3D Sphere Nodes with Dynamic Shading
+      // 4. Render 3D Sphere Nodes
       projectedNodes.forEach((node) => {
         const isSelected = selectedNode && selectedNode.id === node.id;
 
-        // Draw Outer Glow / Halo for selected node
         if (isSelected) {
           ctx.beginPath();
-          ctx.arc(node.projX, node.projY, node.projRadius * 1.6, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(136, 19, 55, 0.25)';
+          ctx.arc(node.projX, node.projY, node.projRadius * 1.8, 0, Math.PI * 2);
+          ctx.fillStyle = activeTheme.accentGlow || 'rgba(136, 19, 55, 0.35)';
           ctx.fill();
         }
 
-        // Draw 3D Radial Gradient Sphere
         const grad = ctx.createRadialGradient(
           node.projX - node.projRadius * 0.3,
           node.projY - node.projRadius * 0.3,
@@ -212,12 +211,12 @@ export default function KnowledgeGraph3D({ nodes, edges, onSelectNode, selectedN
 
         if (isSelected) {
           grad.addColorStop(0, '#ffffff');
-          grad.addColorStop(0.4, '#881337');
-          grad.addColorStop(1, '#4c0519');
+          grad.addColorStop(0.4, activeTheme.primaryLight);
+          grad.addColorStop(1, activeTheme.primary);
         } else {
           grad.addColorStop(0, '#ffffff');
           grad.addColorStop(0.4, node.color);
-          grad.addColorStop(1, '#0f172a');
+          grad.addColorStop(1, '#020617');
         }
 
         ctx.beginPath();
@@ -226,22 +225,21 @@ export default function KnowledgeGraph3D({ nodes, edges, onSelectNode, selectedN
         ctx.globalAlpha = node.alpha;
         ctx.fill();
 
-        ctx.strokeStyle = isSelected ? '#881337' : '#ffffff';
+        ctx.strokeStyle = isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.4)';
         ctx.lineWidth = isSelected ? 2 : 1;
         ctx.stroke();
         ctx.globalAlpha = 1.0;
 
-        // Draw 3D Node Label
+        // Node Label
         ctx.font = `${isSelected ? 'bold ' : ''}11px "Bitcount Prop Single", cursive, sans-serif`;
-        ctx.fillStyle = isSelected ? '#881337' : `rgba(15, 23, 42, ${Math.max(0.5, node.alpha)})`;
+        ctx.fillStyle = isSelected ? '#ffffff' : `rgba(226, 232, 240, ${Math.max(0.6, node.alpha)})`;
         ctx.textAlign = 'center';
-        ctx.fillText(node.title.replace(/\.md$/, ''), node.projX, node.projY + node.projRadius + 14);
+        ctx.fillText((node.title || '').replace(/\.md$/, ''), node.projX, node.projY + node.projRadius + 14);
       });
     };
 
     render3DScene();
 
-    // Mouse / Touch 3D Orbit Interaction Handlers
     const handleMouseDown = (e) => {
       isDraggingRef.current = true;
       lastMouseRef.current = { x: e.clientX, y: e.clientY };
@@ -254,8 +252,6 @@ export default function KnowledgeGraph3D({ nodes, edges, onSelectNode, selectedN
 
       rotYRef.current += dx * 0.008;
       rotXRef.current += dy * 0.008;
-
-      // Clamp vertical rotation
       rotXRef.current = Math.max(-1.2, Math.min(1.2, rotXRef.current));
       lastMouseRef.current = { x: e.clientX, y: e.clientY };
     };
@@ -269,7 +265,6 @@ export default function KnowledgeGraph3D({ nodes, edges, onSelectNode, selectedN
       const clickX = e.clientX - rect.left;
       const clickY = e.clientY - rect.top;
 
-      // Hit test 3D nodes (front to back)
       for (let i = projectedNodes.length - 1; i >= 0; i--) {
         const n = projectedNodes[i];
         const dist = Math.hypot(clickX - n.projX, clickY - n.projY);
@@ -287,8 +282,8 @@ export default function KnowledgeGraph3D({ nodes, edges, onSelectNode, selectedN
 
     const handleResize = () => {
       if (!containerRef.current) return;
-      width = containerRef.current.clientWidth;
-      height = containerRef.current.clientHeight;
+      width = containerRef.current.clientWidth || window.innerWidth || 360;
+      height = containerRef.current.clientHeight || 500;
       canvas.width = width;
       canvas.height = height;
     };
@@ -303,18 +298,13 @@ export default function KnowledgeGraph3D({ nodes, edges, onSelectNode, selectedN
       canvas.removeEventListener('click', handleClick);
       window.removeEventListener('resize', handleResize);
     };
-  }, [nodes3D, edges, selectedNode]);
+  }, [nodes3D, edges, selectedNode, activeTheme]);
 
   return (
     <View style={styles.container}>
-      <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
-        <canvas ref={canvasRef} style={{ width: '100%', height: '100%', cursor: 'grab' }} />
+      <div ref={containerRef} style={{ width: '100%', height: '100%', minHeight: 450, position: 'relative' }}>
+        <canvas ref={canvasRef} style={{ width: '100%', height: '100%', minHeight: 450, cursor: 'grab', display: 'block' }} />
       </div>
-
-      <View style={styles.hintBadge}>
-        <Ionicons name="cube-outline" size={14} color="#881337" style={{ marginRight: 4 }} />
-        <Text style={styles.hintText}>3D Interactive • Drag to Rotate</Text>
-      </View>
     </View>
   );
 }
@@ -324,25 +314,8 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+    minHeight: 450,
     position: 'relative',
-    backgroundColor: '#ffffff',
-  },
-  hintBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 241, 242, 0.9)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#fecdd3',
-  },
-  hintText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#881337',
+    backgroundColor: '#0f172a',
   },
 });

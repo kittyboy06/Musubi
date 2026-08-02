@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../utils/theme';
 import FloatingNavBar from '../components/FloatingNavBar';
+import { useAppTheme } from '../utils/ThemeContext';
 import { fetchNotesFromSupabase, saveNoteToSupabase, subscribeToRealtimeNotes } from '../utils/supabaseSync';
 
 /**
@@ -147,6 +148,7 @@ function FolderNode({
 }
 
 export default function VaultExplorerScreen({ navigation }) {
+  const { activeTheme } = useAppTheme();
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -247,7 +249,7 @@ export default function VaultExplorerScreen({ navigation }) {
 
           <TouchableOpacity
             onPress={() => handleOpenCreateModal('note')}
-            style={styles.iconBtnPrimary}
+            style={[styles.iconBtnPrimary, { backgroundColor: activeTheme.primary }]}
           >
             <Ionicons name="add" size={22} color="#ffffff" />
           </TouchableOpacity>
@@ -257,7 +259,7 @@ export default function VaultExplorerScreen({ navigation }) {
         <View style={styles.actionBanner}>
           <TouchableOpacity
             onPress={() => handleOpenCreateModal('note')}
-            style={styles.actionCardPrimary}
+            style={[styles.actionCardPrimary, { backgroundColor: activeTheme.primary }]}
           >
             <Ionicons name="document-text-outline" size={20} color="#ffffff" style={{ marginRight: 6 }} />
             <Text style={styles.actionCardPrimaryText}>New Note</Text>
@@ -267,8 +269,8 @@ export default function VaultExplorerScreen({ navigation }) {
             onPress={() => handleOpenCreateModal('folder')}
             style={styles.actionCardSecondary}
           >
-            <Ionicons name="folder-open-outline" size={20} color={theme.colors.primaryLight} style={{ marginRight: 6 }} />
-            <Text style={styles.actionCardSecondaryText}>New Folder</Text>
+            <Ionicons name="folder-open-outline" size={20} color={activeTheme.primaryLight} style={{ marginRight: 6 }} />
+            <Text style={[styles.actionCardSecondaryText, { color: activeTheme.primary }]}>New Folder</Text>
           </TouchableOpacity>
         </View>
 

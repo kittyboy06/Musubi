@@ -2,8 +2,10 @@ import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../utils/theme';
+import { useAppTheme } from '../utils/ThemeContext';
 
 export default function FloatingNavBar({ activeRoute, navigation }) {
+  const { activeTheme } = useAppTheme();
   const tabs = [
     { route: 'Dashboard', label: 'HOME', icon: 'home', outlineIcon: 'home-outline' },
     { route: 'VaultExplorer', label: 'JOURNAL', icon: 'folder-open', outlineIcon: 'folder-open-outline' },
@@ -41,7 +43,7 @@ export default function FloatingNavBar({ activeRoute, navigation }) {
 
   return (
     <View style={styles.floatingContainer}>
-      <View style={styles.maroonBar}>
+      <View style={[styles.maroonBar, { backgroundColor: activeTheme.primary }]}>
         {tabs.map((tab, idx) => {
           const isActive = activeRoute === tab.route || (tab.route === 'VaultExplorer' && activeRoute === 'NoteEditor');
 

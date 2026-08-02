@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
+import { ThemeProvider } from './src/utils/ThemeContext';
 
 export default function App() {
   useEffect(() => {
@@ -33,8 +34,10 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="dark" backgroundColor="#ffffff" />
-      <AppNavigator />
+      <ThemeProvider>
+        <StatusBar style="dark" backgroundColor="#ffffff" />
+        <AppNavigator />
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

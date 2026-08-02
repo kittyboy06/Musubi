@@ -9,6 +9,7 @@ import VaultExplorerScreen from '../screens/VaultExplorerScreen';
 import NoteEditorScreen from '../screens/NoteEditorScreen';
 import VaultChatScreen from '../screens/VaultChatScreen';
 import GraphViewScreen from '../screens/GraphViewScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 
 export default function AppNavigator() {
   const [session, setSession] = useState({ user: { id: 'demo-user' } });
@@ -42,6 +43,8 @@ export default function AppNavigator() {
         return <VaultChatScreen navigation={navigation} route={{ params: screenParams }} />;
       case 'GraphView':
         return <GraphViewScreen navigation={navigation} route={{ params: screenParams }} />;
+      case 'Profile':
+        return <ProfileScreen navigation={navigation} route={{ params: screenParams }} />;
       case 'Dashboard':
       default:
         return <DashboardScreen navigation={navigation} route={{ params: screenParams }} />;
