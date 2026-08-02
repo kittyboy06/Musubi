@@ -242,7 +242,7 @@ export default function VaultExplorer({
           onPress={() => handleOpenCreateModal('folder')}
           style={styles.actionBtnSecondary}
         >
-          <Ionicons name="folder-add-outline" size={16} color={theme.colors.primaryLight} style={{ marginRight: 4 }} />
+          <Ionicons name="folder-open-outline" size={16} color={theme.colors.primaryLight} style={{ marginRight: 4 }} />
           <Text style={styles.actionBtnSecondaryText}>New Folder</Text>
         </TouchableOpacity>
       </View>

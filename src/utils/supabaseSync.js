@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * Helper to ensure a user ID is available
@@ -77,30 +78,59 @@ export async function toggleTodoInSupabase(id, doneStatus) {
   }
 }
 
+const VAULT_CACHE_KEY = 'musubi_vault_notes_v1';
+
 /* ==========================================================================
    2. NOTES & GRAPH SYNC
    ========================================================================== */
 
 export async function fetchNotesFromSupabase() {
+  let cached = [];
+  try {
+    const raw = await AsyncStorage.getItem(VAULT_CACHE_KEY);
+    if (raw) cached = JSON.parse(raw);
+  } catch (e) {
+    console.warn('Cache read error:', e);
+  }
+
   try {
     const { data, error } = await supabase
       .from('notes')
       .select('*')
       .order('updated_at', { ascending: false });
 
-    if (!error && data) {
-      return data.map((n) => ({
+    if (!error && data && data.length > 0) {
+      const formatted = data.map((n) => ({
         ...n,
         folder_path: n.folder_path || n.path || '',
       }));
+      AsyncStorage.setItem(VAULT_CACHE_KEY, JSON.stringify(formatted)).catch(() => {});
+      return formatted;
     }
   } catch (err) {
     console.warn('Supabase fetchNotes error:', err);
   }
-  return [];
+
+  return cached;
 }
 
 export async function saveNoteToSupabase(note) {
+  try {
+    // 1. Save to local AsyncStorage vault cache first
+    const raw = await AsyncStorage.getItem(VAULT_CACHE_KEY);
+    let list = raw ? JSON.parse(raw) : [];
+
+    const existingIdx = list.findIndex((n) => n.id === note.id);
+    if (existingIdx >= 0) {
+      list[existingIdx] = { ...list[existingIdx], ...note, updated_at: new Date().toISOString() };
+    } else {
+      list.unshift({ ...note, updated_at: new Date().toISOString() });
+    }
+    await AsyncStorage.setItem(VAULT_CACHE_KEY, JSON.stringify(list));
+  } catch (e) {
+    console.warn('Local vault cache write error:', e);
+  }
+
   try {
     const userId = await getCurrentUserId();
     const timestamp = new Date().toISOString();
